@@ -1,0 +1,15 @@
+{
+  "name": "veritas-trust-ledger",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "pnpm --filter veritas-web dev",
+    "build": "pnpm --filter veritas-web build",
+    "lint": "pnpm --filter veritas-web lint"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.104.1",
+    "next.js": "^1.0.3",
+    "socket.io-client": "^4.8.3"
+  }
+}

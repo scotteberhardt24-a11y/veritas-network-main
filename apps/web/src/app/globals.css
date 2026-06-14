@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #07111f;
+  --foreground: #ffffff;
+  --card: rgba(10,20,40,0.82);
+  --gold: #d4af37;
+  --red: #a41212;
+  --navy: #081120;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgba(212,175,55,0.08), transparent 
+30%),
+    radial-gradient(circle at bottom right, rgba(164,18,18,0.12), 
+transparent 30%),
+    linear-gradient(to bottom, #050b16, #081120);
+  color: white;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.veritas-glow {
+  box-shadow:
+    0 0 20px rgba(212,175,55,0.2),
+    0 0 60px rgba(212,175,55,0.08);
+}
+
+.gold-text {
+  background: linear-gradient(to right, #f7e7a1, #d4af37);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.glass-card {
+  background: rgba(12,18,32,0.78);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.veritas-input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: white;
+  outline: none;
+}
+
+.veritas-input:focus {
+  border-color: #d4af37;
+  box-shadow: 0 0 20px rgba(212,175,55,0.25);
+}
+
+.veritas-button {
+  background: linear-gradient(to right, #b38728, #d4af37);
+  color: black;
+  font-weight: 700;
+  padding: 14px 20px;
+  border-radius: 14px;
+  transition: 0.25s;
+}
+
+.veritas-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px rgba(212,175,55,0.35);
+}
