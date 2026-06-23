@@ -1,380 +1,153 @@
-'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import { Button, LoadingSpinner, EmptyState, Card } from '@/components/ui';
+"use client";
+import { useState, useEffect, useRef } from "react";
+import Sidebar from "@/components/sidebar/Sidebar";
+import TopBar from "@/components/topbar/TopBar";
+import { MessageSquare, Search, Send, Shield, Paperclip, MoreVertical, CheckCheck, Loader2, Phone, Video, Info, Smile } from "lucide-react";
 
-interface Message {
-  message_id: string;
-  sender_id: string;
-  sender_name: string;
-  sender_avatar?: string;
-  content: string;
-  created_at: string;
-  is_read: boolean;
-  attachments?: Attachment[];
-}
+const THREADS = [
+  { id:"1", name:"Brian Walsh",    company:"TechVentures Inc.",  avatar:"BW", last:"Can we hop on a call today?",                    time:"2m",  unread:2, online:true,  score:91, verified:true  },
+  { id:"2", name:"Amy Chen",      company:"GreenLeaf Studios",   avatar:"AC", last:"The design looks amazing! When can we...",        time:"1h",  unread:0, online:true,  score:87, verified:true  },
+  { id:"3", name:"David Price",   company:"FinEdge Capital",     avatar:"DP", last:"Please send the revised draft when ready.",       time:"3h",  unread:1, online:false, score:94, verified:true  },
+  { id:"4", name:"Nadia Rose",    company:"Bloom Health",        avatar:"NR", last:"Contract signed ✓ Looking forward to it!",       time:"1d",  unread:0, online:false, score:82, verified:false },
+  { id:"5", name:"Kevin Marsh",   company:"SaaS Growth Labs",    avatar:"KM", last:"What's your availability next week?",             time:"2d",  unread:0, online:false, score:89, verified:true  },
+  { id:"6", name:"Lisa Chen",     company:"FinVault Inc.",       avatar:"LC", last:"The proposal looks great, just a few questions.", time:"3d",  unread:0, online:false, score:86, verified:true  },
+];
 
-interface Attachment {
-  id: string;
-  type: 'image' | 'file' | 'contract';
-  url: string;
-  name: string;
-}
+const MSG_DATA: Record<string,{from:"me"|"them";text:string;time:string;read:boolean}[]> = {
+  "1":[
+    {from:"them",text:"Hey Scott! I saw your proposal for the SaaS dashboard — really impressive portfolio, especially the FinVault project.",time:"Yesterday 9:14am",read:true},
+    {from:"me",  text:"Thanks Brian! That's one of my favorites too. I've built 4 similar platforms in the last 18 months. Happy to walk you through the architecture on a call.",time:"Yesterday 9:31am",read:true},
+    {from:"them",text:"That would be great. Can we hop on a call today? I'm free at 3pm PST.",time:"2m ago",read:false},
+  ],
+  "2":[
+    {from:"them",text:"Scott, the brand identity package is absolutely stunning. You completely nailed our vision.",time:"2h ago",read:true},
+    {from:"me",  text:"So glad you love it! Ready to send the final Figma files and all export assets whenever you're ready.",time:"1h ago",read:true},
+    {from:"them",text:"The design looks amazing! When can we schedule the final handoff call?",time:"1h ago",read:true},
+  ],
+  "3":[
+    {from:"me",  text:"Hi David, here's the first batch — articles 1–5 of 20 are complete. Let me know your thoughts!",time:"4h ago",read:true},
+    {from:"them",text:"Good start. The tone is slightly too technical for our audience. Please send the revised draft when ready.",time:"3h ago",read:true},
+  ],
+};
 
-interface Thread {
-  thread_id: string;
-  participant_ids: string[];
-  participants: Array<{ user_id: string; name: string; avatar?: string }>;
-  last_message?: string;
-  last_message_time?: string;
-  unread_count: number;
-  is_active: boolean;
-}
+export default function MessagesV2Page() {
+  const [selectedId, setSel] = useState("1");
+  const [search, setSearch]  = useState("");
+  const [input, setInput]    = useState("");
+  const [msgs, setMsgs]      = useState(MSG_DATA);
+  const [threads, setThreads]= useState(THREADS);
+  const [sending, setSending]= useState(false);
+  const bottomRef             = useRef<HTMLDivElement>(null);
 
-export default function MessagesPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [threads, setThreads] = useState<Thread[]>([]);
-  const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [messageInput, setMessageInput] = useState('');
-  const [sending, setSending] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const socketRef = useRef<WebSocket | null>(null);
+  const thread = threads.find(t=>t.id===selectedId)!;
+  const curMsgs= msgs[selectedId]||[];
 
-  useEffect(() => {
-    loadThreads();
-    initializeSocket();
-  }, []);
+  useEffect(()=>{ bottomRef.current?.scrollIntoView({behavior:"smooth"}); },[selectedId,msgs]);
 
-  // Scroll to bottom on new messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  const filtered = threads.filter(t=>!search||t.name.toLowerCase().includes(search.toLowerCase())||t.company.toLowerCase().includes(search.toLowerCase()));
 
-  async function loadThreads() {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('veritas_token');
-
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/messages/threads`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (!res.ok) throw new Error('Failed to load threads');
-
-      const data = await res.json();
-      setThreads(data.data || []);
-
-      // Auto-select first thread
-      if (data.data && data.data.length > 0) {
-        setSelectedThreadId(data.data[0].thread_id);
-        loadMessages(data.data[0].thread_id);
-      }
-    } catch (err) {
-      console.error('Load threads error:', err);
-    } finally {
-      setLoading(false);
-    }
+  function send() {
+    if(!input.trim()||sending) return;
+    const text=input.trim(); setInput(""); setSending(true);
+    const newMsg={from:"me" as const,text,time:"Just now",read:true};
+    setMsgs(p=>({...p,[selectedId]:[...(p[selectedId]||[]),newMsg]}));
+    setThreads(p=>p.map(t=>t.id===selectedId?{...t,last:text,time:"now",unread:0}:t));
+    setTimeout(()=>setSending(false),300);
   }
-
-  async function loadMessages(threadId: string) {
-    try {
-      const token = localStorage.getItem('veritas_token');
-
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/messages/${threadId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (!res.ok) throw new Error('Failed to load messages');
-
-      const data = await res.json();
-      setMessages(data.data || []);
-    } catch (err) {
-      console.error('Load messages error:', err);
-    }
-  }
-
-  function initializeSocket() {
-    const token = localStorage.getItem('veritas_token');
-    if (!token) return;
-
-    // Connect to WebSocket (backend must provide this)
-    const wsUrl = `${process.env.NEXT_PUBLIC_API_URL?.replace('http', 'ws')}/socket.io`;
-    
-    try {
-      socketRef.current = new WebSocket(wsUrl);
-
-      socketRef.current.onopen = () => {
-        console.log('WebSocket connected');
-        socketRef.current?.send(JSON.stringify({
-          type: 'auth',
-          token,
-        }));
-      };
-
-      socketRef.current.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-
-        if (data.type === 'new_message') {
-          // Add message if in current thread
-          if (data.thread_id === selectedThreadId) {
-            setMessages((prev) => [...prev, data.message]);
-          }
-
-          // Update thread list
-          setThreads((prev) =>
-            prev.map((t) =>
-              t.thread_id === data.thread_id
-                ? {
-                    ...t,
-                    last_message: data.message.content,
-                    last_message_time: data.message.created_at,
-                  }
-                : t
-            )
-          );
-        }
-
-        if (data.type === 'typing') {
-          // Show typing indicator (you can add a component for this)
-          console.log(`${data.user_name} is typing...`);
-        }
-
-        if (data.type === 'message_read') {
-          // Update message read status
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.message_id === data.message_id ? { ...m, is_read: true } : m
-            )
-          );
-        }
-      };
-
-      socketRef.current.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
-
-      socketRef.current.onclose = () => {
-        console.log('WebSocket disconnected');
-        // Reconnect after 3 seconds
-        setTimeout(initializeSocket, 3000);
-      };
-    } catch (err) {
-      console.error('WebSocket connection error:', err);
-    }
-  }
-
-  async function handleSendMessage() {
-    if (!messageInput.trim() || !selectedThreadId) return;
-
-    try {
-      setSending(true);
-      const token = localStorage.getItem('veritas_token');
-
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/messages/send`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            thread_id: selectedThreadId,
-            content: messageInput,
-          }),
-        }
-      );
-
-      if (!res.ok) throw new Error('Failed to send message');
-
-      setMessageInput('');
-      // Message will be added via WebSocket
-    } catch (err) {
-      console.error('Send message error:', err);
-    } finally {
-      setSending(false);
-    }
-  }
-
-  if (loading) {
-    return <LoadingSpinner fullScreen message="Loading messages..." />;
-  }
-
-  const selectedThread = threads.find((t) => t.thread_id === selectedThreadId);
 
   return (
-    <ProtectedRoute>
-      <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-gray-900 text-white flex flex-col lg:flex-row">
-        {/* Threads List (Sidebar) */}
-        <div className="w-full lg:w-72 bg-gray-900/50 border-b lg:border-b-0 lg:border-r border-gray-800 overflow-y-auto">
-          <div className="p-4 border-b border-gray-800">
-            <h2 className="text-xl font-bold mb-4">💬 Messages</h2>
-            <Button
-              variant="primary"
-              fullWidth
-              size="sm"
-              onClick={() => router.push('/messages/new')}
-            >
-              + New Message
-            </Button>
-          </div>
+    <div style={{display:"flex",minHeight:"100vh",background:"#010812"}}>
+      <Sidebar/>
+      <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+        <TopBar/>
+        <div style={{flex:1,display:"flex",overflow:"hidden",padding:16,gap:12,height:"calc(100vh - 60px)"}}>
 
-          {threads.length === 0 ? (
-            <div className="p-4">
-              <EmptyState
-                icon="💬"
-                title="No messages"
-                description="Start a conversation"
-                variant="compact"
-              />
+          {/* Thread list */}
+          <div style={{width:300,flexShrink:0,background:"rgba(4,15,36,0.95)",border:"1px solid rgba(26,107,255,0.15)",borderRadius:16,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+            <div style={{padding:"14px 16px",borderBottom:"1px solid rgba(26,107,255,0.1)"}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+                <MessageSquare size={18} color="#1a6bff"/>
+                <span style={{fontWeight:800,color:"white"}}>Messages</span>
+                {threads.reduce((a,t)=>a+t.unread,0)>0&&<span style={{marginLeft:"auto",background:"#ff3333",color:"white",fontSize:"0.65rem",fontWeight:800,padding:"2px 7px",borderRadius:12}}>{threads.reduce((a,t)=>a+t.unread,0)}</span>}
+              </div>
+              <div style={{position:"relative"}}>
+                <Search size={13} style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"rgba(255,255,255,0.3)"}}/>
+                <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search conversations..." style={{width:"100%",padding:"8px 10px 8px 30px",background:"rgba(6,18,41,0.8)",border:"1px solid rgba(26,107,255,0.15)",borderRadius:8,color:"white",fontSize:"0.78rem",outline:"none"}}/>
+              </div>
             </div>
-          ) : (
-            <div className="divide-y divide-gray-800">
-              {threads.map((thread) => (
-                <button
-                  key={thread.thread_id}
-                  onClick={() => {
-                    setSelectedThreadId(thread.thread_id);
-                    loadMessages(thread.thread_id);
-                  }}
-                  className={`w-full p-4 text-left transition-all ${
-                    selectedThreadId === thread.thread_id
-                      ? 'bg-blue-900/30 border-l-2 border-l-blue-500'
-                      : 'hover:bg-gray-800/30'
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <p className="font-bold text-sm">
-                      {thread.participants
-                        .map((p) => p.name)
-                        .slice(0, 2)
-                        .join(', ')}
-                    </p>
-                    {thread.unread_count > 0 && (
-                      <span className="px-2 py-1 rounded-full bg-blue-600 text-white text-xs font-bold">
-                        {thread.unread_count}
-                      </span>
-                    )}
+            <div style={{flex:1,overflowY:"auto"}}>
+              {filtered.map(t=>(
+                <div key={t.id} onClick={()=>{setSel(t.id);setThreads(p=>p.map(x=>x.id===t.id?{...x,unread:0}:x));}} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",cursor:"pointer",borderBottom:"1px solid rgba(26,107,255,0.05)",background:selectedId===t.id?"rgba(26,107,255,0.1)":"transparent",transition:"background 0.15s"}}>
+                  <div style={{position:"relative",flexShrink:0}}>
+                    <div style={{width:40,height:40,borderRadius:11,background:"linear-gradient(135deg,#1a3a6b,#0d1f3d)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:"0.88rem",color:"white"}}>{t.avatar}</div>
+                    {t.online&&<span style={{position:"absolute",bottom:-1,right:-1,width:10,height:10,borderRadius:"50%",background:"#00e676",border:"2px solid #040f24"}}/>}
                   </div>
-                  <p className="text-xs text-gray-400 line-clamp-2">
-                    {thread.last_message || 'No messages yet'}
-                  </p>
-                </button>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}>
+                      <span style={{fontWeight:700,fontSize:"0.85rem",color:"white",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{t.name}</span>
+                      <span style={{fontSize:"0.65rem",color:"rgba(255,255,255,0.35)",flexShrink:0,marginLeft:4}}>{t.time}</span>
+                    </div>
+                    <div style={{fontSize:"0.7rem",color:"rgba(255,255,255,0.38)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{t.company}</div>
+                    <div style={{fontSize:"0.7rem",color:"rgba(255,255,255,0.5)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",marginTop:1}}>{t.last}</div>
+                  </div>
+                  {t.unread>0&&<span style={{width:18,height:18,borderRadius:"50%",background:"#1a6bff",color:"white",fontSize:"0.62rem",fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{t.unread}</span>}
+                </div>
               ))}
             </div>
-          )}
-        </div>
+          </div>
 
-        {/* Chat Area */}
-        {selectedThread ? (
-          <div className="flex-1 flex flex-col">
+          {/* Chat window */}
+          <div style={{flex:1,background:"rgba(4,15,36,0.95)",border:"1px solid rgba(26,107,255,0.15)",borderRadius:16,display:"flex",flexDirection:"column",overflow:"hidden"}}>
             {/* Header */}
-            <div className="bg-gray-900/50 border-b border-gray-800 p-4">
-              <h3 className="font-bold text-lg">
-                {selectedThread.participants.map((p) => p.name).join(', ')}
-              </h3>
-              <p className="text-xs text-gray-400 mt-1">
-                {selectedThread.is_active ? '🟢 Active' : '⚫ Offline'}
-              </p>
+            <div style={{padding:"12px 18px",borderBottom:"1px solid rgba(26,107,255,0.1)",display:"flex",alignItems:"center",gap:12}}>
+              <div style={{position:"relative"}}>
+                <div style={{width:40,height:40,borderRadius:11,background:"linear-gradient(135deg,#1a3a6b,#0d1f3d)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>{thread.avatar}</div>
+                {thread.online&&<span style={{position:"absolute",bottom:-1,right:-1,width:10,height:10,borderRadius:"50%",background:"#00e676",border:"2px solid #040f24"}}/>}
+              </div>
+              <div style={{flex:1}}>
+                <div style={{display:"flex",alignItems:"center",gap:6,fontWeight:700,color:"white"}}>
+                  {thread.name}{thread.verified&&<Shield size={12} color="#1a6bff"/>}
+                </div>
+                <div style={{fontSize:"0.68rem",color:"rgba(255,255,255,0.4)"}}>{thread.company} · Score {thread.score} · {thread.online?"Online":"Offline"}</div>
+              </div>
+              <div style={{display:"flex",gap:6}}>
+                {[Phone,Video,Info].map((Icon,i)=>(
+                  <button key={i} style={{width:34,height:34,borderRadius:9,background:"rgba(26,107,255,0.07)",border:"1px solid rgba(26,107,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+                    <Icon size={15} color="rgba(255,255,255,0.55)"/>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.length === 0 ? (
-                <div className="h-full flex items-center justify-center">
-                  <EmptyState
-                    icon="💬"
-                    title="No messages yet"
-                    description="Start the conversation"
-                    variant="compact"
-                  />
+            <div style={{flex:1,overflowY:"auto",padding:"16px",display:"flex",flexDirection:"column",gap:12}}>
+              {curMsgs.map((m,i)=>(
+                <div key={i} style={{display:"flex",gap:8,flexDirection:m.from==="me"?"row-reverse":"row",alignItems:"flex-end"}}>
+                  {m.from==="them"&&<div style={{width:30,height:30,borderRadius:8,background:"linear-gradient(135deg,#1a3a6b,#0d1f3d)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.75rem",fontWeight:700,flexShrink:0}}>{thread.avatar}</div>}
+                  <div style={{maxWidth:"72%"}}>
+                    <div style={{padding:"10px 14px",borderRadius:m.from==="me"?"16px 16px 4px 16px":"16px 16px 16px 4px",background:m.from==="me"?"rgba(26,107,255,0.2)":"rgba(255,255,255,0.06)",border:`1px solid ${m.from==="me"?"rgba(26,107,255,0.3)":"rgba(255,255,255,0.08)"}`,fontSize:"0.85rem",lineHeight:1.55,color:"rgba(255,255,255,0.9)"}}>
+                      {m.text}
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:4,marginTop:3,justifyContent:m.from==="me"?"flex-end":"flex-start",fontSize:"0.62rem",color:"rgba(255,255,255,0.28)"}}>
+                      {m.time}{m.from==="me"&&<CheckCheck size={11} color={m.read?"#1a6bff":"rgba(255,255,255,0.25)"}/>}
+                    </div>
+                  </div>
                 </div>
-              ) : (
-                <>
-                  {messages.map((msg) => (
-                    <MessageBubble key={msg.message_id} message={msg} />
-                  ))}
-                  <div ref={messagesEndRef} />
-                </>
-              )}
+              ))}
+              <div ref={bottomRef}/>
             </div>
 
             {/* Input */}
-            <div className="bg-gray-900/50 border-t border-gray-800 p-4">
-              <div className="flex gap-3">
-                <input
-                  type="text"
-                  value={messageInput}
-                  onChange={(e) => setMessageInput(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                  placeholder="Type a message... (Shift+Enter for new line)"
-                  className="flex-1 px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-none"
-                />
-                <Button
-                  variant="primary"
-                  onClick={handleSendMessage}
-                  loading={sending}
-                  disabled={!messageInput.trim()}
-                >
-                  Send
-                </Button>
-              </div>
+            <div style={{padding:"12px 16px",borderTop:"1px solid rgba(26,107,255,0.1)",display:"flex",gap:8,alignItems:"flex-end"}}>
+              <button style={{width:36,height:36,borderRadius:9,background:"rgba(26,107,255,0.07)",border:"1px solid rgba(26,107,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}><Paperclip size={16} color="rgba(255,255,255,0.45)"/></button>
+              <textarea value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}} placeholder={`Message ${thread.name}...`} rows={1} style={{flex:1,padding:"10px 14px",background:"rgba(6,18,41,0.8)",border:"1px solid rgba(26,107,255,0.18)",borderRadius:10,color:"white",fontSize:"0.88rem",outline:"none",resize:"none",lineHeight:1.5,maxHeight:120}} onInput={e=>{const el=e.currentTarget;el.style.height="auto";el.style.height=Math.min(el.scrollHeight,120)+"px";}}/>
+              <button onClick={send} disabled={!input.trim()||sending} style={{width:40,height:40,borderRadius:10,background:input.trim()?"linear-gradient(135deg,#1a6bff,#0050dd)":"rgba(26,107,255,0.1)",border:"none",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0,boxShadow:input.trim()?"0 2px 12px rgba(26,107,255,0.4)":"none",transition:"all 0.2s",opacity:input.trim()?1:0.5}}>
+                {sending?<Loader2 size={17} color="white" style={{animation:"spin 1s linear infinite"}}/>:<Send size={17} color="white"/>}
+              </button>
             </div>
           </div>
-        ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <EmptyState
-              icon="💬"
-              title="Select a conversation"
-              description="Choose a thread to view messages"
-              variant="compact"
-            />
-          </div>
-        )}
-      </main>
-    </ProtectedRoute>
-  );
-}
-
-function MessageBubble({ message }: { message: Message }) {
-  const isCurrentUser = localStorage.getItem('veritas_user_id') === message.sender_id;
-
-  return (
-    <div className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
-      <div
-        className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${
-          isCurrentUser
-            ? 'bg-blue-600 text-white rounded-br-none'
-            : 'bg-gray-800 text-gray-100 rounded-bl-none'
-        }`}
-      >
-        {!isCurrentUser && (
-          <p className="text-xs font-bold text-gray-400 mb-1">
-            {message.sender_name}
-          </p>
-        )}
-        <p className="break-words text-sm">{message.content}</p>
-        <p className={`text-xs mt-1 ${isCurrentUser ? 'text-blue-100' : 'text-gray-500'}`}>
-          {new Date(message.created_at).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-        </p>
+        </div>
       </div>
     </div>
   );

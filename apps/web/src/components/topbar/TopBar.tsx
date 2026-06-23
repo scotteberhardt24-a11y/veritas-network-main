@@ -1,46 +1,46 @@
-"use client";
 
-import { Bell, Search } from "lucide-react";
+"use client";
+import { useRouter } from "next/navigation";
+import { Bell, Search, Shield, ChevronDown } from "lucide-react";
 
 export default function TopBar() {
+  const router = useRouter();
   return (
-    <div className="h-24 flex items-center justify-between px-8 border-b 
-border-white/10">
-
-      <div>
-        <h1 className="text-3xl font-bold gold-text">
-          Welcome Back
-        </h1>
-
-        <p className="text-white/50">
-          Secure Trust Infrastructure
-        </p>
+    <div style={{
+      height:60, background:"rgba(2,13,31,0.97)",
+      borderBottom:"1px solid rgba(26,107,255,0.1)",
+      backdropFilter:"blur(20px)", display:"flex",
+      alignItems:"center", padding:"0 24px", gap:16,
+      position:"sticky", top:0, zIndex:40, flexShrink:0,
+    }}>
+      {/* Search */}
+      <div style={{flex:1,maxWidth:420,position:"relative"}}>
+        <Search size={14} style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"rgba(255,255,255,0.3)"}}/>
+        <input placeholder="Search jobs, workers, contracts..." style={{
+          width:"100%", background:"rgba(26,107,255,0.06)",
+          border:"1px solid rgba(26,107,255,0.15)", borderRadius:8,
+          padding:"8px 12px 8px 34px", color:"white", fontSize:"0.82rem",
+          outline:"none",
+        }}/>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div style={{flex:1}}/>
 
-        <div className="relative">
+      {/* Notifications */}
+      <button style={{position:"relative",width:36,height:36,borderRadius:8,background:"rgba(26,107,255,0.08)",border:"1px solid rgba(26,107,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+        <Bell size={16} color="rgba(255,255,255,0.6)"/>
+        <span style={{position:"absolute",top:6,right:6,width:7,height:7,borderRadius:"50%",background:"#ff3333",border:"1.5px solid #020d1f"}}/>
+      </button>
 
-          <Search
-            size={18}
-            className="absolute left-4 top-4 text-white/40"
-          />
-
-          <input
-            placeholder="Search..."
-            className="pl-11 pr-5 py-3 rounded-2xl bg-white/5 border 
-border-white/10 outline-none text-white"
-          />
-
+      {/* Profile */}
+      <button style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",background:"rgba(26,107,255,0.08)",border:"1px solid rgba(26,107,255,0.15)",borderRadius:8,cursor:"pointer"}}>
+        <div style={{width:26,height:26,borderRadius:6,background:"linear-gradient(135deg,#1a3a6b,#0d1f3d)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.9rem"}}>👷</div>
+        <div style={{textAlign:"left"}}>
+          <div style={{fontSize:"0.75rem",fontWeight:700,color:"white"}}>Scott E.</div>
+          <div style={{fontSize:"0.6rem",color:"#00e676",fontWeight:700}}>Score: 845</div>
         </div>
-
-        <button className="w-12 h-12 rounded-2xl bg-white/5 border 
-border-white/10 flex items-center justify-center">
-          <Bell />
-        </button>
-
-      </div>
-
+        <ChevronDown size={12} color="rgba(255,255,255,0.4)"/>
+      </button>
     </div>
   );
 }

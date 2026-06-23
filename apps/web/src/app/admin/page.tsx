@@ -1,543 +1,230 @@
-'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button, LoadingSpinner, EmptyState } from '@/components/ui';
+"use client";
 
-interface DashboardMetrics {
-  totalUsers: number;
-  activeJobs: number;
-  escrowVolume: number;
-  todayRevenue: number;
-  weeklyGrowth: number;
-  disputeCount: number;
-}
+import { useState, useEffect } from "react";
+import Sidebar from "@/components/sidebar/Sidebar";
+import TopBar from "@/components/topbar/TopBar";
+import {
+  Shield, Users, Briefcase, DollarSign, AlertTriangle,
+  TrendingUp, Ban, CheckCircle2, Search, RefreshCw,
+  BarChart3, Activity, Loader2, Eye,
+} from "lucide-react";
 
-interface User {
-  user_id: string;
-  name: string;
-  email: string;
-  role: string;
-  truscore: number;
-  email_verified: boolean;
-  suspended: boolean;
-  created_at: string;
-  last_login: string;
-}
+const API = process.env.NEXT_PUBLIC_API_URL || "https://veritas-trust-ledger-production.up.railway.app";
 
-interface Job {
-  job_id: string;
-  title: string;
-  status: string;
-  client_name: string;
-  worker_name: string;
-  budget: number;
-  created_at: string;
-}
+const MOCK_USERS = [
+  { id:"U001", name:"Alex Chen",    email:"alex@dev.io",  role:"worker", score:99, status:"active",   joined:"Jan 2025", earnings:184500, jobs:247 },
+  { id:"U002", name:"Maya Rodriguez",email:"maya@d.co",  role:"worker", score:98, status:"active",   joined:"Feb 2025", earnings:142000, jobs:189 },
+  { id:"U003", name:"Brian Walsh",  email:"brian@tv.com", role:"client", score:91, status:"active",   joined:"Nov 2024", earnings:0,      jobs:34  },
+  { id:"U004", name:"Bad Actor",    email:"scam@bad.io",  role:"worker", score:12, status:"flagged",  joined:"Jun 2026", earnings:0,      jobs:0   },
+  { id:"U005", name:"James Park",   email:"jp@write.co",  role:"worker", score:97, status:"active",   joined:"Mar 2025", earnings:98700,  jobs:312 },
+  { id:"U006", name:"New User",     email:"new@user.io",  role:"worker", score:50, status:"pending",  joined:"Jun 2026", earnings:0,      jobs:0   },
+];
 
-type TabType = 'overview' | 'users' | 'jobs' | 'finance' | 'ai';
+const MOCK_DISPUTES = [
+  { id:"DSP-1021", parties:"CloudSync AI vs Zoe L.", amount:2000, status:"open",     opened:"Jun 28" },
+  { id:"DSP-1019", parties:"RetailBoost vs Tom E.",  amount:800,  status:"resolved", opened:"Jun 20" },
+  { id:"DSP-1015", parties:"FinEdge vs Rina P.",     amount:1500, status:"open",     opened:"Jun 15" },
+];
 
-export default function AdminDashboard() {
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterRole, setFilterRole] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
+export default function AdminPage() {
+  const [tab, setTab]         = useState("Overview");
+  const [users, setUsers]     = useState(MOCK_USERS);
+  const [search, setSearch]   = useState("");
+  const [banning, setBanning] = useState<string|null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const TABS = ["Overview","Users","Disputes","Platform"];
 
   useEffect(() => {
-    loadDashboardData();
+    const token = localStorage.getItem("veritas_token");
+    if (!token) return;
+    fetch(`${API}/api/admin/stats`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).catch(() => {});
   }, []);
 
-  async function loadDashboardData() {
-    try {
-      const token = localStorage.getItem('veritas_token');
-
-      if (!token) {
-        router.push('/auth');
-        return;
-      }
-
-      // Load metrics
-      const metricsRes = await fetch('/api/admin/metrics', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (metricsRes.ok) {
-        const metricsData = await metricsRes.json();
-        setMetrics(metricsData.data);
-      }
-
-      // Load users
-      const usersRes = await fetch('/api/admin/users', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (usersRes.ok) {
-        const usersData = await usersRes.json();
-        setUsers(usersData.data || []);
-      }
-
-      // Load jobs
-      const jobsRes = await fetch('/api/admin/jobs', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (jobsRes.ok) {
-        const jobsData = await jobsRes.json();
-        setJobs(jobsData.data || []);
-      }
-
-      setLoading(false);
-    } catch (err) {
-      setError('Failed to load admin dashboard');
-      console.error('Admin load error:', err);
-      setLoading(false);
-    }
+  function banUser(id: string) {
+    setBanning(id);
+    setTimeout(() => {
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, status:"banned" } : u));
+      setBanning(null);
+    }, 1000);
   }
 
-  async function suspendUser(userId: string, reason: string) {
-    if (!confirm('Are you sure you want to suspend this user?')) return;
-
-    const token = localStorage.getItem('veritas_token');
-    try {
-      await fetch(`/api/admin/users/${userId}/suspend`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ reason }),
-      });
-
-      loadDashboardData();
-    } catch (err) {
-      console.error('Failed to suspend user:', err);
-    }
-  }
-
-  const filteredUsers = users.filter((u) => {
-    const matchesSearch =
-      u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRole = filterRole === 'all' || u.role === filterRole;
-    return matchesSearch && matchesRole;
-  });
-
-  const filteredJobs = jobs.filter((j) => {
-    const matchesStatus = filterStatus === 'all' || j.status === filterStatus;
-    return matchesStatus;
-  });
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-gray-900 flex items-center justify-center">
-        <LoadingSpinner message="Loading admin dashboard..." />
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-gray-900 text-white">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-slate-900 to-gray-900 border-b border-gray-800 sticky top-0 z-40 p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-black">🛡️ Admin Dashboard</h1>
-            <p className="text-gray-400 text-sm mt-1">
-              Veritas Trust Ledger Control Panel
-            </p>
-          </div>
-          <Button
-            onClick={() => router.push('/dashboard')}
-            variant="secondary"
-            size="md"
-          >
-            ← Back to Dashboard
-          </Button>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="bg-gray-900/50 border-b border-gray-800 sticky top-16 z-30 overflow-x-auto">
-        <div className="flex gap-2 sm:gap-4 px-4 sm:px-6">
-          {[
-            { id: 'overview' as TabType, label: '📊 Overview' },
-            { id: 'users' as TabType, label: '👥 Users' },
-            { id: 'jobs' as TabType, label: '💼 Jobs' },
-            { id: 'finance' as TabType, label: '💰 Finance' },
-            { id: 'ai' as TabType, label: '🤖 AI' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 sm:px-6 py-4 border-b-2 transition-all whitespace-nowrap text-sm sm:text-base font-bold ${
-                activeTab === tab.id
-                  ? 'border-blue-500 text-blue-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-300'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-        {/* OVERVIEW TAB */}
-        {activeTab === 'overview' && metrics && (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
-              <MetricCard
-                title="Total Users"
-                value={metrics.totalUsers.toLocaleString()}
-                change={`+${metrics.weeklyGrowth}% this week`}
-                icon="👥"
-              />
-              <MetricCard
-                title="Active Jobs"
-                value={metrics.activeJobs.toLocaleString()}
-                change="Real-time"
-                icon="💼"
-              />
-              <MetricCard
-                title="Escrow Volume"
-                value={`$${(metrics.escrowVolume / 1000).toFixed(1)}K`}
-                change="Total held"
-                icon="💰"
-              />
-              <MetricCard
-                title="Today's Revenue"
-                value={`$${metrics.todayRevenue.toLocaleString()}`}
-                change="Platform fees"
-                icon="📈"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6">
-                <h3 className="font-bold text-lg mb-4">Recent Activity</h3>
-                <ActivityFeed />
-              </div>
-
-              <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6">
-                <h3 className="font-bold text-lg mb-4">Health Status</h3>
-                <SystemStatus />
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* USERS TAB */}
-        {activeTab === 'users' && (
-          <>
-            <div className="mb-6 flex flex-col sm:flex-row gap-4">
-              <input
-                type="text"
-                placeholder="Search by name or email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
-              />
-              <select
-                value={filterRole}
-                onChange={(e) => setFilterRole(e.target.value)}
-                className="px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-blue-500"
-              >
-                <option value="all">All Roles</option>
-                <option value="worker">Worker</option>
-                <option value="client">Client</option>
-              </select>
-            </div>
-
-            {filteredUsers.length === 0 ? (
-              <EmptyState
-                icon="👥"
-                title="No users found"
-                description="Try adjusting your search criteria"
-              />
-            ) : (
-              <div className="bg-gray-900/40 border border-gray-800 rounded-2xl overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-800/50 border-b border-gray-700">
-                      <tr>
-                        <th className="px-4 py-3 sm:px-6 text-left text-sm font-bold text-gray-400">
-                          Name
-                        </th>
-                        <th className="px-4 py-3 sm:px-6 text-left text-sm font-bold text-gray-400 hidden sm:table-cell">
-                          Email
-                        </th>
-                        <th className="px-4 py-3 sm:px-6 text-left text-sm font-bold text-gray-400 hidden md:table-cell">
-                          Role
-                        </th>
-                        <th className="px-4 py-3 sm:px-6 text-left text-sm font-bold text-gray-400">
-                          TruScore
-                        </th>
-                        <th className="px-4 py-3 sm:px-6 text-left text-sm font-bold text-gray-400 hidden lg:table-cell">
-                          Status
-                        </th>
-                        <th className="px-4 py-3 sm:px-6 text-left text-sm font-bold text-gray-400">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-800">
-                      {filteredUsers.map((user) => (
-                        <tr
-                          key={user.user_id}
-                          className="hover:bg-gray-800/30 transition-colors"
-                        >
-                          <td className="px-4 py-4 sm:px-6 font-bold">{user.name}</td>
-                          <td className="px-4 py-4 sm:px-6 text-gray-400 hidden sm:table-cell text-sm">
-                            {user.email}
-                          </td>
-                          <td className="px-4 py-4 sm:px-6 text-gray-400 hidden md:table-cell capitalize text-sm">
-                            {user.role}
-                          </td>
-                          <td className="px-4 py-4 sm:px-6 font-bold text-yellow-400">
-                            {user.truscore}
-                          </td>
-                          <td className="px-4 py-4 sm:px-6 hidden lg:table-cell">
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                              user.suspended
-                                ? 'bg-red-900/30 text-red-400'
-                                : 'bg-green-900/30 text-green-400'
-                            }`}>
-                              {user.suspended ? 'Suspended' : 'Active'}
-                            </span>
-                          </td>
-                          <td className="px-4 py-4 sm:px-6">
-                            <button
-                              onClick={() => suspendUser(user.user_id, 'Admin action')}
-                              className="text-red-400 hover:text-red-300 text-sm font-bold"
-                            >
-                              {user.suspended ? 'Restore' : 'Suspend'}
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* JOBS TAB */}
-        {activeTab === 'jobs' && (
-          <>
-            <div className="mb-6">
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-blue-500"
-              >
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="active">Active</option>
-                <option value="completed">Completed</option>
-                <option value="disputed">Disputed</option>
-              </select>
-            </div>
-
-            {filteredJobs.length === 0 ? (
-              <EmptyState
-                icon="💼"
-                title="No jobs found"
-                description="Try adjusting your filters"
-              />
-            ) : (
-              <div className="bg-gray-900/40 border border-gray-800 rounded-2xl overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-800/50 border-b border-gray-700">
-                      <tr>
-                        <th className="px-4 py-3 sm:px-6 text-left text-sm font-bold text-gray-400">
-                          Job Title
-                        </th>
-                        <th className="px-4 py-3 sm:px-6 text-left text-sm font-bold text-gray-400 hidden sm:table-cell">
-                          Client
-                        </th>
-                        <th className="px-4 py-3 sm:px-6 text-left text-sm font-bold text-gray-400 hidden md:table-cell">
-                          Budget
-                        </th>
-                        <th className="px-4 py-3 sm:px-6 text-left text-sm font-bold text-gray-400">
-                          Status
-                        </th>
-                        <th className="px-4 py-3 sm:px-6 text-left text-sm font-bold text-gray-400 hidden lg:table-cell">
-                          Posted
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-800">
-                      {filteredJobs.map((job) => (
-                        <tr
-                          key={job.job_id}
-                          className="hover:bg-gray-800/30 transition-colors"
-                        >
-                          <td className="px-4 py-4 sm:px-6 font-bold">{job.title}</td>
-                          <td className="px-4 py-4 sm:px-6 text-gray-400 hidden sm:table-cell text-sm">
-                            {job.client_name}
-                          </td>
-                          <td className="px-4 py-4 sm:px-6 font-bold hidden md:table-cell">
-                            ${job.budget}
-                          </td>
-                          <td className="px-4 py-4 sm:px-6">
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                              job.status === 'completed'
-                                ? 'bg-green-900/30 text-green-400'
-                                : job.status === 'disputed'
-                                ? 'bg-red-900/30 text-red-400'
-                                : 'bg-blue-900/30 text-blue-400'
-                            }`}>
-                              {job.status}
-                            </span>
-                          </td>
-                          <td className="px-4 py-4 sm:px-6 text-gray-400 hidden lg:table-cell text-sm">
-                            {new Date(job.created_at).toLocaleDateString()}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* FINANCE TAB */}
-        {activeTab === 'finance' && metrics && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6">
-              <h3 className="font-bold text-lg mb-6">Financial Overview</h3>
-              <div className="space-y-4">
-                <FinanceStat label="Escrow Balance" value={`$${metrics.escrowVolume.toLocaleString()}`} />
-                <FinanceStat label="Pending Payouts" value="$12,450" />
-                <FinanceStat label="Total Revenue" value={`$${metrics.todayRevenue.toLocaleString()}`} />
-                <FinanceStat label="Avg Transaction" value="$287" />
-              </div>
-            </div>
-
-            <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6">
-              <h3 className="font-bold text-lg mb-6">Revenue Breakdown</h3>
-              <p className="text-gray-500 text-center py-8">
-                📊 Chart coming soon
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* AI TAB */}
-        {activeTab === 'ai' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            <AIMetric label="Match Accuracy" value="94.2%" trend="+2.1%" />
-            <AIMetric label="Avg Response Time" value="1.3s" trend="-0.2s" />
-            <AIMetric label="Price Accuracy" value="91.7%" trend="+3.4%" />
-            <AIMetric label="Dispute Prediction" value="87.5%" trend="+1.8%" />
-          </div>
-        )}
-      </div>
-    </div>
+  const filtered = users.filter(u =>
+    !search || u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase())
   );
-}
 
-// Helper Components
-function MetricCard({
-  title,
-  value,
-  change,
-  icon,
-}: {
-  title: string;
-  value: string;
-  change: string;
-  icon: string;
-}) {
-  return (
-    <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6 hover:border-gray-700 transition-all">
-      <div className="flex justify-between items-start mb-4">
-        <h3 className="text-sm font-bold text-gray-400">{title}</h3>
-        <span className="text-2xl">{icon}</span>
-      </div>
-      <p className="text-3xl font-black mb-2">{value}</p>
-      <p className="text-sm text-blue-400">{change}</p>
-    </div>
-  );
-}
+  const stats = [
+    { icon:Users,      label:"Total Users",    value:"12,847",  sub:"+124 today",  color:"text-cyan-400"   },
+    { icon:Briefcase,  label:"Active Jobs",    value:"2,341",   sub:"+89 today",   color:"text-yellow-400" },
+    { icon:DollarSign, label:"Escrow Held",    value:"$1.2M",   sub:"Across 891",  color:"text-green-400"  },
+    { icon:AlertTriangle,label:"Open Disputes",value:"14",      sub:"2 urgent",    color:"text-red-400"    },
+  ];
 
-function ActivityFeed() {
-  const activities = [
-    { icon: '👤', text: 'New user: John Smith', time: '2m ago' },
-    { icon: '💼', text: 'Job posted: Plumbing repair', time: '5m ago' },
-    { icon: '✓', text: 'Job completed: Kitchen renovation', time: '12m ago' },
-    { icon: '⚠️', text: 'Dispute opened: Payment issue', time: '18m ago' },
-    { icon: '💰', text: 'Payout released: $450', time: '25m ago' },
+  const platformMetrics = [
+    { label:"Platform Revenue (MTD)",    value:"$48,200",   change:"+18%"  },
+    { label:"Avg TruScore",              value:"78.4",      change:"+1.2"  },
+    { label:"Dispute Resolution Rate",   value:"99.2%",     change:"+0.1%" },
+    { label:"Worker Retention (90d)",    value:"84.7%",     change:"+3.2%" },
+    { label:"Avg Job Value",             value:"$3,240",    change:"+$180" },
+    { label:"AI Match Acceptance Rate",  value:"67.3%",     change:"+4.1%" },
+    { label:"Escrow Release Rate",       value:"98.1%",     change:"+0.3%" },
+    { label:"New Registrations (MTD)",   value:"1,247",     change:"+31%"  },
   ];
 
   return (
-    <div className="space-y-4">
-      {activities.map((activity, i) => (
-        <div key={i} className="flex gap-3 pb-4 border-b border-gray-800 last:border-b-0">
-          <span className="text-xl">{activity.icon}</span>
-          <div>
-            <p className="text-sm font-bold">{activity.text}</p>
-            <p className="text-xs text-gray-500">{activity.time}</p>
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <div className="flex-1 flex flex-col">
+        <TopBar />
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <Shield className="text-yellow-400" size={28}/>
+              <h1 className="text-3xl font-black gold-text">Admin Panel</h1>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/20">
+              <div className="w-2 h-2 rounded-full bg-red-400 animate-pulse"/>
+              <span className="text-xs text-red-400 font-medium">Admin Access</span>
+            </div>
           </div>
-        </div>
-      ))}
-    </div>
-  );
-}
 
-function SystemStatus() {
-  const checks = [
-    { label: 'API', status: 'online' },
-    { label: 'Database', status: 'online' },
-    { label: 'Blockchain', status: 'offline' },
-    { label: 'Email Service', status: 'online' },
-  ];
+          <div className="flex gap-2 mb-6 border-b border-white/10">
+            {TABS.map(t => (
+              <button key={t} onClick={() => setTab(t)} className={"px-4 py-2.5 text-sm font-medium border-b-2 transition -mb-px "+(tab===t ? "border-yellow-400 text-yellow-400" : "border-transparent text-white/40 hover:text-white")}>{t}</button>
+            ))}
+          </div>
 
-  return (
-    <div className="space-y-3">
-      {checks.map((check) => (
-        <div key={check.label} className="flex items-center justify-between">
-          <span className="text-sm">{check.label}</span>
-          <span className={`text-xs font-bold px-3 py-1 rounded-full ${
-            check.status === 'online'
-              ? 'bg-green-900/30 text-green-400'
-              : 'bg-red-900/30 text-red-400'
-          }`}>
-            {check.status}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
+          {/* OVERVIEW */}
+          {tab === "Overview" && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {stats.map((s,i) => {
+                  const Icon = s.icon;
+                  return (
+                    <div key={i} className="glass-card rounded-2xl p-5">
+                      <Icon size={20} className={s.color}/>
+                      <div className="text-2xl font-black mt-3 mb-0.5">{s.value}</div>
+                      <div className="text-xs text-white/50">{s.label}</div>
+                      <div className="text-xs text-green-400 mt-1">{s.sub}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="glass-card rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-4"><Activity size={16} className="text-yellow-400"/><span className="font-bold">Recent Platform Events</span></div>
+                <div className="space-y-3">
+                  {[
+                    { type:"🟢", msg:"New Elite member: Alex Chen reached TruScore 99", time:"2m ago" },
+                    { type:"💰", msg:"Large escrow activated: $18,000 — Bloom Health", time:"15m ago" },
+                    { type:"🚨", msg:"Dispute escalated: DSP-1021 — requires manual review", time:"42m ago" },
+                    { type:"👤", msg:"New registration spike: +47 users in last hour", time:"1h ago" },
+                    { type:"🤖", msg:"AI model updated: Match accuracy improved to 94.2%", time:"3h ago" },
+                  ].map((e,i) => (
+                    <div key={i} className="flex items-center gap-3 py-2 border-b border-white/5 last:border-0">
+                      <span>{e.type}</span>
+                      <span className="text-sm text-white/70 flex-1">{e.msg}</span>
+                      <span className="text-xs text-white/30 flex-shrink-0">{e.time}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
-function FinanceStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between items-center pb-4 border-b border-gray-800">
-      <span className="text-gray-400 text-sm">{label}</span>
-      <span className="font-bold text-lg">{value}</span>
-    </div>
-  );
-}
+          {/* USERS */}
+          {tab === "Users" && (
+            <div>
+              <div className="flex gap-3 mb-4">
+                <div className="relative flex-1 max-w-sm">
+                  <Search size={14} className="absolute left-3 top-3.5 text-white/40"/>
+                  <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search users..." className="veritas-input pl-9 py-3 text-sm"/>
+                </div>
+              </div>
+              <div className="glass-card rounded-2xl overflow-hidden">
+                <div className="grid grid-cols-12 px-5 py-3 text-xs text-white/40 uppercase tracking-wide border-b border-white/10">
+                  <div className="col-span-3">User</div>
+                  <div className="col-span-2">Role</div>
+                  <div className="col-span-1">Score</div>
+                  <div className="col-span-2 hidden sm:block">Earnings</div>
+                  <div className="col-span-2">Status</div>
+                  <div className="col-span-2">Actions</div>
+                </div>
+                {filtered.map(u => (
+                  <div key={u.id} className="grid grid-cols-12 px-5 py-3.5 border-b border-white/5 last:border-0 items-center hover:bg-white/3 transition">
+                    <div className="col-span-3 flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-xs font-bold flex-shrink-0">{u.name[0]}</div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium truncate">{u.name}</div>
+                        <div className="text-xs text-white/30 truncate">{u.email}</div>
+                      </div>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-white/50 capitalize">{u.role}</span>
+                    </div>
+                    <div className="col-span-1 font-bold gold-text text-sm">{u.score}</div>
+                    <div className="col-span-2 hidden sm:block text-sm text-green-400 font-medium">{u.earnings > 0 ? `$${u.earnings.toLocaleString()}` : "—"}</div>
+                    <div className="col-span-2">
+                      <span className={"text-xs px-2 py-0.5 rounded-full border font-medium "+(
+                        u.status==="active"  ? "bg-green-500/10 text-green-400 border-green-500/20" :
+                        u.status==="flagged" ? "bg-red-500/10 text-red-400 border-red-500/20" :
+                        u.status==="banned"  ? "bg-red-900/20 text-red-600 border-red-900/30" :
+                        "bg-white/5 text-white/40 border-white/10"
+                      )}>{u.status}</span>
+                    </div>
+                    <div className="col-span-2 flex gap-2">
+                      <button className="p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-white transition"><Eye size={14}/></button>
+                      {u.status !== "banned" && u.status !== "active" && (
+                        <button onClick={() => banUser(u.id)} disabled={banning===u.id} className="p-1.5 rounded-lg hover:bg-red-500/20 text-white/40 hover:text-red-400 transition">
+                          {banning===u.id ? <Loader2 size={14} className="animate-spin"/> : <Ban size={14}/>}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
-function AIMetric({ label, value, trend }: { label: string; value: string; trend: string }) {
-  const isPositive = trend.startsWith('+');
-  return (
-    <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6">
-      <p className="text-gray-400 text-sm mb-2">{label}</p>
-      <p className="text-2xl font-black mb-2">{value}</p>
-      <p className={`text-sm font-bold ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
-        {trend} from last week
-      </p>
+          {/* DISPUTES */}
+          {tab === "Disputes" && (
+            <div className="space-y-3 max-w-3xl">
+              {MOCK_DISPUTES.map(d => (
+                <div key={d.id} className="glass-card rounded-2xl p-5 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={"w-10 h-10 rounded-xl flex items-center justify-center "+(d.status==="open" ? "bg-red-500/10" : "bg-green-500/10")}>
+                      {d.status==="open" ? <AlertTriangle size={18} className="text-red-400"/> : <CheckCircle2 size={18} className="text-green-400"/>}
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm">{d.id} — {d.parties}</div>
+                      <div className="text-xs text-white/40">Opened {d.opened} · Disputed: <span className="text-red-400">${d.amount.toLocaleString()}</span></div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={"text-xs px-3 py-1 rounded-full border font-medium "+(d.status==="open" ? "bg-red-500/10 text-red-400 border-red-500/20" : "bg-green-500/10 text-green-400 border-green-500/20")}>{d.status}</span>
+                    {d.status==="open" && <button className="text-xs px-3 py-1.5 rounded-lg bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/30 transition">Review</button>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* PLATFORM */}
+          {tab === "Platform" && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl">
+              {platformMetrics.map((m,i) => (
+                <div key={i} className="glass-card rounded-2xl p-5">
+                  <div className="text-xs text-white/40 mb-2">{m.label}</div>
+                  <div className="text-xl font-black mb-1">{m.value}</div>
+                  <div className="text-xs text-green-400">{m.change}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }

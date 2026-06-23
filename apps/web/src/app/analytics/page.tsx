@@ -1,394 +1,136 @@
-'use client';
 
-import { useState, useEffect } from 'react';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import { Button, LoadingSpinner, Card } from '@/components/ui';
+"use client";
 
-interface AnalyticsData {
-  period: {
-    start_date: string;
-    end_date: string;
-  };
-  summary: {
-    total_jobs: number;
-    total_earnings: number;
-    avg_rating: number;
-    response_rate: number;
-  };
-  performance: {
-    jobs_completed: number;
-    jobs_ongoing: number;
-    jobs_cancelled: number;
-    completion_rate: number;
-    avg_completion_time: number;
-  };
-  earnings: {
-    total: number;
-    from_jobs: number;
-    from_referrals: number;
-    pending: number;
-    withdrawn: number;
-  };
-  trends: {
-    date: string;
-    jobs: number;
-    earnings: number;
-  }[];
-  top_skills: Array<{
-    skill: string;
-    jobs_completed: number;
-    avg_earnings: number;
-  }>;
-  client_breakdown: Array<{
-    name: string;
-    jobs: number;
-    total_spent: number;
-    rating: number;
-  }>;
-}
+import { useState } from "react";
+import Sidebar from "@/components/sidebar/Sidebar";
+import TopBar from "@/components/topbar/TopBar";
+import { BarChart3, TrendingUp, DollarSign, Briefcase, Star, Calendar, Download } from "lucide-react";
 
-export default function AnalyticsPage() {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<AnalyticsData | null>(null);
-  const [period, setPeriod] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
+const PERIODS = ["7 days","30 days","90 days","1 year","All time"];
 
-  useEffect(() => {
-    loadAnalytics();
-  }, [period]);
+const MONTHLY = [
+  { month:"Jan", earnings:18400, jobs:12, score:89 },
+  { month:"Feb", earnings:22100, jobs:15, score:90 },
+  { month:"Mar", earnings:31200, jobs:18, score:91 },
+  { month:"Apr", earnings:28900, jobs:14, score:92 },
+  { month:"May", earnings:38700, jobs:21, score:93 },
+  { month:"Jun", earnings:43200, jobs:24, score:94 },
+];
 
-  async function loadAnalytics() {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('veritas_token');
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/analytics?period=${period}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (!res.ok) throw new Error('Failed to load analytics');
-
-      const response = await res.json();
-      setData(response.data);
-    } catch (error) {
-      console.error('Failed to load analytics:', error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  if (loading) {
-    return <LoadingSpinner fullScreen message="Loading analytics..." />;
-  }
-
-  if (!data) {
-    return (
-      <ProtectedRoute>
-        <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-gray-900 text-white p-4">
-          <Card variant="default">Error loading analytics</Card>
-        </main>
-      </ProtectedRoute>
-    );
-  }
-
+function BarGroup({ data, max, color }: { data: number[]; max: number; color: string }) {
   return (
-    <ProtectedRoute>
-      <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-gray-900 text-white p-4 sm:p-6 lg:p-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-            <div>
-              <h1 className="text-3xl sm:text-4xl font-black mb-2">
-                📊 Analytics
-              </h1>
-              <p className="text-gray-400">
-                Track your performance and earnings
-              </p>
-            </div>
-
-            <div className="flex gap-2 flex-wrap">
-              {(['week', 'month', 'quarter', 'year'] as const).map((p) => (
-                <Button
-                  key={p}
-                  variant={period === p ? 'primary' : 'secondary'}
-                  size="sm"
-                  onClick={() => setPeriod(p)}
-                >
-                  {p.charAt(0).toUpperCase() + p.slice(1)}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <SummaryCard
-              label="Total Jobs"
-              value={data.summary.total_jobs.toString()}
-              icon="💼"
-              trend="+12%"
-            />
-            <SummaryCard
-              label="Total Earnings"
-              value={`$${data.summary.total_earnings.toLocaleString()}`}
-              icon="💰"
-              trend="+23%"
-              highlight
-            />
-            <SummaryCard
-              label="Avg Rating"
-              value={`${data.summary.avg_rating.toFixed(1)}⭐`}
-              icon="⭐"
-              trend="+0.3"
-            />
-            <SummaryCard
-              label="Response Rate"
-              value={`${data.summary.response_rate}%`}
-              icon="⚡"
-              trend="+5%"
-            />
-          </div>
-
-          {/* Main Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            {/* Performance */}
-            <Card variant="default">
-              <h3 className="text-lg font-bold mb-4">📈 Performance</h3>
-              <div className="space-y-3">
-                <MetricRow
-                  label="Completed"
-                  value={data.performance.jobs_completed.toString()}
-                  color="bg-green-600"
-                />
-                <MetricRow
-                  label="Ongoing"
-                  value={data.performance.jobs_ongoing.toString()}
-                  color="bg-blue-600"
-                />
-                <MetricRow
-                  label="Cancelled"
-                  value={data.performance.jobs_cancelled.toString()}
-                  color="bg-red-600"
-                />
-                <div className="pt-3 border-t border-gray-700">
-                  <p className="text-xs text-gray-400 mb-1">
-                    Completion Rate
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-2 rounded-full bg-gray-700 overflow-hidden">
-                      <div
-                        className="h-full bg-green-500"
-                        style={{
-                          width: `${data.performance.completion_rate}%`,
-                        }}
-                      />
-                    </div>
-                    <span className="font-bold text-sm">
-                      {data.performance.completion_rate}%
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Earnings Breakdown */}
-            <Card variant="default">
-              <h3 className="text-lg font-bold mb-4">💸 Earnings</h3>
-              <div className="space-y-3">
-                <EarningRow
-                  label="From Jobs"
-                  amount={`$${data.earnings.from_jobs.toLocaleString()}`}
-                  percent={Math.round(
-                    (data.earnings.from_jobs / data.earnings.total) * 100
-                  )}
-                  color="bg-blue-500"
-                />
-                <EarningRow
-                  label="From Referrals"
-                  amount={`$${data.earnings.from_referrals.toLocaleString()}`}
-                  percent={Math.round(
-                    (data.earnings.from_referrals / data.earnings.total) * 100
-                  )}
-                  color="bg-green-500"
-                />
-                <div className="pt-3 border-t border-gray-700">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-xs text-gray-400">Pending</span>
-                    <span className="font-bold text-yellow-400">
-                      ${data.earnings.pending.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-xs text-gray-400">Withdrawn</span>
-                    <span className="font-bold text-green-400">
-                      ${data.earnings.withdrawn.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Quick Stats */}
-            <Card variant="default">
-              <h3 className="text-lg font-bold mb-4">📊 Quick Stats</h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Avg Completion</span>
-                  <span className="font-bold">
-                    {data.performance.avg_completion_time} days
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">TruScore</span>
-                  <span className="font-bold text-cyan-400">850+</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Skills</span>
-                  <span className="font-bold">{data.top_skills.length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Active Clients</span>
-                  <span className="font-bold">
-                    {data.client_breakdown.length}
-                  </span>
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          {/* Bottom Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Top Skills */}
-            <Card variant="default">
-              <h3 className="text-lg font-bold mb-4">🎯 Top Skills</h3>
-              <div className="space-y-3">
-                {data.top_skills.map((skill, i) => (
-                  <div key={i} className="p-3 rounded-lg bg-gray-800/30">
-                    <div className="flex justify-between mb-2">
-                      <p className="font-bold">{skill.skill}</p>
-                      <p className="text-sm text-gray-400">
-                        {skill.jobs_completed} jobs
-                      </p>
-                    </div>
-                    <p className="text-sm text-cyan-400">
-                      Avg: ${skill.avg_earnings.toLocaleString()}/job
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            {/* Client Breakdown */}
-            <Card variant="default">
-              <h3 className="text-lg font-bold mb-4">👥 Top Clients</h3>
-              <div className="space-y-3">
-                {data.client_breakdown.slice(0, 5).map((client, i) => (
-                  <div key={i} className="p-3 rounded-lg bg-gray-800/30">
-                    <div className="flex justify-between mb-2">
-                      <p className="font-bold">{client.name}</p>
-                      <p className="text-sm text-gray-400">
-                        {client.jobs} jobs
-                      </p>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <p className="text-gray-400">
-                        ${client.total_spent.toLocaleString()}
-                      </p>
-                      <p className="text-yellow-400">
-                        {'⭐'.repeat(Math.round(client.rating))}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
-
-          {/* Export */}
-          <div className="mt-8 text-center">
-            <Button
-              variant="secondary"
-              onClick={() => alert('Export functionality in production')}
-            >
-              📥 Export Report
-            </Button>
-          </div>
-        </div>
-      </main>
-    </ProtectedRoute>
-  );
-}
-
-function SummaryCard({
-  label,
-  value,
-  icon,
-  trend,
-  highlight = false,
-}: {
-  label: string;
-  value: string;
-  icon: string;
-  trend: string;
-  highlight?: boolean;
-}) {
-  return (
-    <Card
-      variant="default"
-      className={highlight ? 'bg-cyan-900/20 border-cyan-700/30' : ''}
-    >
-      <div className="flex justify-between items-start mb-3">
-        <p className="text-xs text-gray-400">{label}</p>
-        <span className="text-2xl">{icon}</span>
-      </div>
-      <p className="text-2xl font-black mb-2">{value}</p>
-      <p className="text-xs text-green-400">↗ {trend}</p>
-    </Card>
-  );
-}
-
-function MetricRow({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: string;
-  color: string;
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <div className={`w-2 h-2 rounded-full ${color}`} />
-        <span className="text-sm text-gray-400">{label}</span>
-      </div>
-      <span className="font-bold">{value}</span>
+    <div className="flex items-end gap-1 h-32">
+      {data.map((v,i) => (
+        <div key={i} className={"rounded-t-md flex-1 transition-all "+color} style={{ height: `${(v/max)*100}%`, minHeight:4 }} />
+      ))}
     </div>
   );
 }
 
-function EarningRow({
-  label,
-  amount,
-  percent,
-  color,
-}: {
-  label: string;
-  amount: string;
-  percent: number;
-  color: string;
-}) {
+export default function AnalyticsPage() {
+  const [period, setPeriod] = useState("30 days");
+
+  const totalEarnings = MONTHLY.reduce((a,m)=>a+m.earnings,0);
+  const totalJobs     = MONTHLY.reduce((a,m)=>a+m.jobs,0);
+  const avgScore      = Math.round(MONTHLY.reduce((a,m)=>a+m.score,0)/MONTHLY.length);
+  const maxEarnings   = Math.max(...MONTHLY.map(m=>m.earnings));
+
   return (
-    <div>
-      <div className="flex justify-between mb-1">
-        <span className="text-sm text-gray-400">{label}</span>
-        <span className="font-bold">{amount}</span>
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <div className="flex-1 flex flex-col">
+        <TopBar />
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <BarChart3 className="text-yellow-400" size={28}/>
+              <h1 className="text-3xl font-black gold-text">Analytics</h1>
+            </div>
+            <div className="flex gap-2">
+              {PERIODS.map(p => (
+                <button key={p} onClick={()=>setPeriod(p)} className={"px-3 py-1.5 rounded-xl text-xs font-medium transition "+(period===p ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30" : "border border-white/10 text-white/40 hover:text-white")}>{p}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* KPI Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {[
+              { icon:DollarSign, label:"Total Earnings",   value:`$${totalEarnings.toLocaleString()}`, sub:"+18% vs last period", color:"text-green-400"  },
+              { icon:Briefcase,  label:"Jobs Completed",   value:totalJobs,    sub:"+4 vs last period",    color:"text-yellow-400" },
+              { icon:Star,       label:"Avg TruScore",     value:avgScore,     sub:"+5 points",            color:"text-cyan-400"   },
+              { icon:TrendingUp, label:"Repeat Hire Rate", value:"71%",        sub:"+8% vs last period",   color:"text-purple-400" },
+            ].map((s,i) => {
+              const Icon = s.icon;
+              return (
+                <div key={i} className="glass-card rounded-2xl p-5">
+                  <Icon size={18} className={s.color}/>
+                  <div className="text-2xl font-black mt-3 mb-0.5">{s.value}</div>
+                  <div className="text-xs text-white/50 mb-1">{s.label}</div>
+                  <div className="text-xs text-green-400">{s.sub}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Earnings Chart */}
+          <div className="glass-card rounded-3xl p-6 mb-5">
+            <div className="flex items-center justify-between mb-5">
+              <span className="font-bold">Monthly Earnings</span>
+              <button className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white transition">
+                <Download size={14}/> Export
+              </button>
+            </div>
+            <div className="flex items-end gap-4">
+              <div className="flex-1">
+                <BarGroup data={MONTHLY.map(m=>m.earnings)} max={maxEarnings} color="bg-yellow-500/70 hover:bg-yellow-500" />
+                <div className="flex gap-1 mt-2">
+                  {MONTHLY.map(m => <div key={m.month} className="flex-1 text-center text-xs text-white/30">{m.month}</div>)}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Monthly Breakdown Table */}
+          <div className="glass-card rounded-2xl overflow-hidden mb-5">
+            <div className="grid grid-cols-4 px-5 py-3 text-xs text-white/40 uppercase tracking-wide border-b border-white/10">
+              <div>Month</div><div>Earnings</div><div>Jobs</div><div>TruScore</div>
+            </div>
+            {[...MONTHLY].reverse().map((m,i) => (
+              <div key={i} className="grid grid-cols-4 px-5 py-3.5 border-b border-white/5 last:border-0 hover:bg-white/3 transition">
+                <div className="flex items-center gap-2"><Calendar size={14} className="text-white/30"/><span className="text-sm">{m.month} 2026</span></div>
+                <div className="text-sm font-bold text-green-400">${m.earnings.toLocaleString()}</div>
+                <div className="text-sm">{m.jobs} jobs</div>
+                <div className="text-sm font-bold gold-text">{m.score}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Top Categories */}
+          <div className="glass-card rounded-2xl p-5">
+            <h3 className="font-bold mb-4">Earnings by Category</h3>
+            <div className="space-y-3">
+              {[
+                { cat:"Development",  pct:62, amount:113244 },
+                { cat:"Design",       pct:21, amount:38325  },
+                { cat:"Consulting",   pct:11, amount:20081  },
+                { cat:"Writing",      pct:6,  amount:10950  },
+              ].map((c,i) => (
+                <div key={i}>
+                  <div className="flex justify-between text-sm mb-1.5">
+                    <span className="text-white/70">{c.cat}</span>
+                    <span className="font-bold">${c.amount.toLocaleString()} <span className="text-white/40">({c.pct}%)</span></span>
+                  </div>
+                  <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                    <div className="h-full rounded-full bg-gradient-to-r from-yellow-500 to-yellow-300" style={{width:`${c.pct}%`}}/>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </main>
       </div>
-      <div className="h-1.5 rounded-full bg-gray-700 overflow-hidden">
-        <div className={`h-full ${color}`} style={{ width: `${percent}%` }} />
-      </div>
-      <p className="text-xs text-gray-500 mt-1">{percent}% of total</p>
     </div>
   );
 }

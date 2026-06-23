@@ -2,74 +2,524 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────
+   VERITAS NETWORK — OFFICIAL DESIGN SYSTEM
+   "Truth Becomes Trust"
+   ───────────────────────────────────────── */
+
 :root {
-  --background: #07111f;
-  --foreground: #ffffff;
-  --card: rgba(10,20,40,0.82);
-  --gold: #d4af37;
-  --red: #a41212;
-  --navy: #081120;
+  /* Core Background */
+  --vt-bg-deep:      #010812;
+  --vt-bg-navy:      #020d1f;
+  --vt-bg-card:      #040f24;
+  --vt-bg-card-2:    #061229;
+
+  /* Blue Accent System */
+  --vt-blue-bright:  #1a6bff;
+  --vt-blue-electric:#2979ff;
+  --vt-blue-glow:    #0066ff;
+  --vt-blue-light:   #00aaff;
+  --vt-blue-cyan:    #00d4ff;
+
+  /* Gold / Trust Score System */
+  --vt-gold:         #c9a227;
+  --vt-gold-bright:  #d4af37;
+  --vt-gold-light:   #f0c040;
+  --vt-gold-dark:    #a07810;
+
+  /* Green (verified / active) */
+  --vt-green:        #00c853;
+  --vt-green-bright: #00e676;
+
+  /* Text */
+  --vt-text-primary: #ffffff;
+  --vt-text-secondary: rgba(255,255,255,0.7);
+  --vt-text-muted:   rgba(255,255,255,0.4);
+  --vt-text-cyan:    #00d4ff;
+  --vt-text-blue:    #4da6ff;
+
+  /* Borders */
+  --vt-border:       rgba(26,107,255,0.15);
+  --vt-border-bright:rgba(26,107,255,0.35);
+  --vt-border-gold:  rgba(201,162,39,0.4);
 }
 
-html {
-  scroll-behavior: smooth;
-}
+/* ── Base ── */
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-body {
-  background:
-    radial-gradient(circle at top left, rgba(212,175,55,0.08), transparent 
-30%),
-    radial-gradient(circle at bottom right, rgba(164,18,18,0.12), 
-transparent 30%),
-    linear-gradient(to bottom, #050b16, #081120);
-  color: white;
+html, body {
+  background: var(--vt-bg-deep);
+  color: var(--vt-text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
 }
 
-.veritas-glow {
-  box-shadow:
-    0 0 20px rgba(212,175,55,0.2),
-    0 0 60px rgba(212,175,55,0.08);
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--vt-bg-navy); }
+::-webkit-scrollbar-thumb { background: var(--vt-blue-glow); border-radius: 3px; }
+
+/* ═══════════════════════════════════════════
+   TYPOGRAPHY
+   ═══════════════════════════════════════════ */
+
+.vt-title {
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: #ffffff;
 }
 
-.gold-text {
-  background: linear-gradient(to right, #f7e7a1, #d4af37);
+.vt-blue-text {
+  background: linear-gradient(135deg, #00aaff 0%, #1a6bff 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.glass-card {
-  background: rgba(12,18,32,0.78);
-  backdrop-filter: blur(14px);
-  border: 1px solid rgba(255,255,255,0.08);
+.vt-gold-text {
+  background: linear-gradient(135deg, #f0c040 0%, #c9a227 50%, #d4af37 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.veritas-input {
-  width: 100%;
-  padding: 14px;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
+.vt-cyan-text { color: var(--vt-blue-cyan); }
+.vt-green-text { color: var(--vt-green-bright); }
+
+.vt-tagline {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--vt-blue-cyan);
+}
+
+/* ═══════════════════════════════════════════
+   CARDS
+   ═══════════════════════════════════════════ */
+
+.vt-card {
+  background: linear-gradient(135deg, rgba(4,15,36,0.95) 0%, rgba(6,18,41,0.9) 100%);
+  border: 1px solid rgba(26,107,255,0.18);
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.vt-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at top left, rgba(26,107,255,0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.vt-card-glow {
+  background: linear-gradient(135deg, rgba(4,15,36,0.98) 0%, rgba(6,18,41,0.95) 100%);
+  border: 1px solid rgba(26,107,255,0.3);
+  border-radius: 16px;
+  box-shadow: 0 0 40px rgba(26,107,255,0.12), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.vt-card-gold {
+  background: linear-gradient(135deg, rgba(4,15,36,0.98) 0%, rgba(15,10,2,0.95) 100%);
+  border: 1px solid rgba(201,162,39,0.3);
+  border-radius: 16px;
+  box-shadow: 0 0 40px rgba(201,162,39,0.08);
+}
+
+/* ═══════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════ */
+
+.vt-btn-primary {
+  background: linear-gradient(135deg, #1a6bff 0%, #0050dd 100%);
   color: white;
-  outline: none;
-}
-
-.veritas-input:focus {
-  border-color: #d4af37;
-  box-shadow: 0 0 20px rgba(212,175,55,0.25);
-}
-
-.veritas-button {
-  background: linear-gradient(to right, #b38728, #d4af37);
-  color: black;
   font-weight: 700;
-  padding: 14px 20px;
-  border-radius: 14px;
-  transition: 0.25s;
+  border-radius: 10px;
+  padding: 12px 28px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(26,107,255,0.4);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.vt-btn-primary:hover {
+  background: linear-gradient(135deg, #2979ff 0%, #1a6bff 100%);
+  box-shadow: 0 6px 30px rgba(26,107,255,0.6);
+  transform: translateY(-1px);
 }
 
-.veritas-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 25px rgba(212,175,55,0.35);
+.vt-btn-gold {
+  background: linear-gradient(135deg, #d4af37 0%, #c9a227 50%, #a07810 100%);
+  color: #0a0800;
+  font-weight: 800;
+  border-radius: 10px;
+  padding: 12px 28px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(201,162,39,0.4);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
+.vt-btn-gold:hover {
+  background: linear-gradient(135deg, #f0c040 0%, #d4af37 100%);
+  box-shadow: 0 6px 30px rgba(212,175,55,0.5);
+  transform: translateY(-1px);
+}
+
+.vt-btn-outline {
+  background: rgba(26,107,255,0.08);
+  color: #4da6ff;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 11px 24px;
+  border: 1px solid rgba(26,107,255,0.35);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.vt-btn-outline:hover {
+  background: rgba(26,107,255,0.15);
+  border-color: rgba(26,107,255,0.6);
+}
+
+.vt-btn-book {
+  background: linear-gradient(135deg, #1a6bff 0%, #0044cc 100%);
+  color: white;
+  font-weight: 800;
+  border-radius: 10px;
+  padding: 14px 32px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 24px rgba(26,107,255,0.5);
+  font-size: 1.05rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+}
+
+/* ═══════════════════════════════════════════
+   TRUST SCORE BADGE
+   ═══════════════════════════════════════════ */
+
+.vt-trust-badge {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.vt-trust-badge-shield {
+  background: linear-gradient(145deg, #1a3a6b 0%, #0d1f3d 40%, #0a1828 100%);
+  border: 2px solid var(--vt-gold);
+  border-radius: 50% 50% 45% 45%;
+  box-shadow:
+    0 0 0 3px rgba(201,162,39,0.2),
+    0 0 40px rgba(201,162,39,0.3),
+    inset 0 2px 4px rgba(255,255,255,0.1);
+}
+
+.vt-score-display {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--vt-green-bright);
+  line-height: 1;
+  text-shadow: 0 0 20px rgba(0,230,118,0.5);
+}
+
+.vt-score-excellent {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--vt-green-bright);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* ═══════════════════════════════════════════
+   VERIFIED BADGE CHIP
+   ═══════════════════════════════════════════ */
+
+.vt-verified-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(26,107,255,0.12);
+  border: 1px solid rgba(26,107,255,0.3);
+  border-radius: 20px;
+  padding: 4px 12px 4px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #4da6ff;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════
+   STAT CHIPS
+   ═══════════════════════════════════════════ */
+
+.vt-stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: rgba(26,107,255,0.1);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.vt-stat-cell {
+  background: rgba(4,15,36,0.8);
+  padding: 14px 10px;
+  text-align: center;
+}
+
+.vt-stat-value {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--vt-green-bright);
+  line-height: 1;
+}
+
+.vt-stat-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 4px;
+}
+
+/* ═══════════════════════════════════════════
+   VERIFICATION TAGS
+   ═══════════════════════════════════════════ */
+
+.vt-verify-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(4,15,36,0.9);
+  border: 1px solid rgba(26,107,255,0.15);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255,255,255,0.6);
+}
+
+/* ═══════════════════════════════════════════
+   INPUTS
+   ═══════════════════════════════════════════ */
+
+.vt-input {
+  width: 100%;
+  background: rgba(6,18,41,0.8);
+  border: 1px solid rgba(26,107,255,0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: white;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.vt-input:focus {
+  border-color: rgba(26,107,255,0.5);
+  box-shadow: 0 0 0 3px rgba(26,107,255,0.1);
+}
+.vt-input::placeholder { color: rgba(255,255,255,0.3); }
+
+select.vt-input { cursor: pointer; }
+
+/* ═══════════════════════════════════════════
+   SIDEBAR (App Shell)
+   ═══════════════════════════════════════════ */
+
+.vt-sidebar {
+  width: 240px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #020d1f 0%, #010812 100%);
+  border-right: 1px solid rgba(26,107,255,0.12);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.vt-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.5);
+  border-radius: 10px;
+  margin: 2px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+}
+.vt-nav-item:hover {
+  background: rgba(26,107,255,0.08);
+  color: rgba(255,255,255,0.85);
+}
+.vt-nav-item.active {
+  background: rgba(26,107,255,0.15);
+  color: #4da6ff;
+  border: 1px solid rgba(26,107,255,0.2);
+}
+
+/* ═══════════════════════════════════════════
+   TOPBAR
+   ═══════════════════════════════════════════ */
+
+.vt-topbar {
+  height: 64px;
+  background: rgba(2,13,31,0.95);
+  border-bottom: 1px solid rgba(26,107,255,0.1);
+  backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+/* ═══════════════════════════════════════════
+   GLOWS & BACKGROUNDS
+   ═══════════════════════════════════════════ */
+
+.vt-bg-hero {
+  background:
+    radial-gradient(ellipse 80% 60% at 15% 40%, rgba(26,107,255,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 20%, rgba(0,100,255,0.08) 0%, transparent 50%),
+    linear-gradient(180deg, #010812 0%, #020d1f 50%, #010812 100%);
+}
+
+.vt-glow-blue {
+  box-shadow: 0 0 40px rgba(26,107,255,0.25);
+}
+.vt-glow-gold {
+  box-shadow: 0 0 40px rgba(201,162,39,0.3);
+}
+
+/* ═══════════════════════════════════════════
+   WORLD MAP DOTS BACKGROUND
+   ═══════════════════════════════════════════ */
+
+.vt-world-bg {
+  background-image: radial-gradient(circle, rgba(26,107,255,0.3) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.25;
+}
+
+/* ═══════════════════════════════════════════
+   STEP CIRCLES (How It Works)
+   ═══════════════════════════════════════════ */
+
+.vt-step-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(26,107,255,0.15);
+  border: 2px solid rgba(26,107,255,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #4da6ff;
+  flex-shrink: 0;
+  box-shadow: 0 0 20px rgba(26,107,255,0.2);
+}
+
+.vt-step-arrow {
+  color: rgba(26,107,255,0.5);
+  font-size: 1.5rem;
+}
+
+/* ═══════════════════════════════════════════
+   FEATURE PILL BADGES
+   ═══════════════════════════════════════════ */
+
+.vt-feature-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid rgba(26,107,255,0.2);
+  border-radius: 40px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: rgba(26,107,255,0.06);
+}
+
+/* ═══════════════════════════════════════════
+   STAR RATING
+   ═══════════════════════════════════════════ */
+
+.vt-stars { color: #ffd700; }
+
+/* ═══════════════════════════════════════════
+   MOBILE CARD (phone mockup style)
+   ═══════════════════════════════════════════ */
+
+.vt-mobile-card {
+  background: #0a0f1e;
+  border: 1px solid rgba(26,107,255,0.2);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+/* ═══════════════════════════════════════════
+   FOOTER BAR
+   ═══════════════════════════════════════════ */
+
+.vt-footer-bar {
+  background: rgba(26,107,255,0.08);
+  border-top: 1px solid rgba(26,107,255,0.15);
+  border-radius: 0 0 16px 16px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 8px;
+}
+
+.vt-footer-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ═══════════════════════════════════════════
+   UTILITY OVERRIDES
+   ═══════════════════════════════════════════ */
+
+/* Legacy support — map old classes to new system */
+.glass-card { @apply vt-card; }
+.gold-text   { @apply vt-gold-text; }
+.veritas-input { @apply vt-input; }
+.veritas-glow  { box-shadow: 0 0 30px rgba(26,107,255,0.3); }
