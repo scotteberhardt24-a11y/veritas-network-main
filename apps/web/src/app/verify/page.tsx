@@ -3,91 +3,131 @@
 import { useState } from "react";
 import Sidebar from "@/components/sidebar/Sidebar";
 import TopBar from "@/components/topbar/TopBar";
-import { ShieldCheck, CheckCircle2, Clock, Upload, Phone, Mail, CreditCard, Loader2, AlertCircle, Zap } from "lucide-react";
+import { VeritasVerifiedBadge } from "@/components/badges/VeritasBadges";
+import { ShieldCheck, CheckCircle2, Upload, Loader2, Zap, Lock, AlertCircle, Camera, Phone, Mail, CreditCard, Globe, Award } from "lucide-react";
 
-const STEPS_DATA = [
-  { id:"email",  icon:Mail,         label:"Email Verification",      desc:"Verify your email address",                   done:true,  points:5  },
-  { id:"phone",  icon:Phone,        label:"Phone Verification",      desc:"Confirm your mobile number via SMS",           done:true,  points:10 },
-  { id:"id",     icon:CreditCard,   label:"Government ID",           desc:"Passport, driver's license, or national ID",  done:false, points:20 },
-  { id:"address",icon:ShieldCheck,  label:"Address Verification",    desc:"Utility bill or bank statement",               done:false, points:10 },
-  { id:"payment",icon:CreditCard,   label:"Payment Method",          desc:"Add a verified bank account or card",          done:false, points:5  },
+const STEPS = [
+  { id:"email",    icon:Mail,       label:"Email",              sub:"Verify your email address",           pts:50,  done:true,  required:true  },
+  { id:"phone",    icon:Phone,      label:"Phone Number",       sub:"SMS verification — takes 30 seconds", pts:100, done:true,  required:true  },
+  { id:"id",       icon:CreditCard, label:"Government ID",      sub:"Passport, driver's license, or ID",   pts:200, done:false, required:false },
+  { id:"address",  icon:Globe,      label:"Address",            sub:"Utility bill or bank statement",       pts:100, done:false, required:false },
+  { id:"biometric",icon:Camera,     label:"Face Verification",  sub:"Selfie match with your ID",           pts:150, done:false, required:false },
+  { id:"skills",   icon:Award,      label:"Skills Assessment",  sub:"Pass a skill test for your category",  pts:200, done:false, required:false },
 ];
 
-export default function VerifyPage() {
-  const [steps,setSteps]       = useState(STEPS_DATA);
-  const [verifying,setVerifying] = useState<string|null>(null);
-  const [expanded,setExpanded] = useState<string|null>("id");
+export default function VerifyV2Page() {
+  const [steps, setSteps]       = useState(STEPS);
+  const [expanded, setExpanded] = useState<string|null>("id");
+  const [verifying, setVerifying] = useState<string|null>(null);
 
   const doneCount  = steps.filter(s=>s.done).length;
-  const totalPts   = steps.reduce((a,s)=>a+(s.done?s.points:0),0);
-  const maxPts     = steps.reduce((a,s)=>a+s.points,0);
-  const scorePct   = Math.round((doneCount/steps.length)*100);
+  const earnedPts  = steps.reduce((a,s)=>a+(s.done?s.pts:0), 0);
+  const totalPts   = steps.reduce((a,s)=>a+s.pts, 0);
+  const pct        = Math.round((doneCount/steps.length)*100);
+  const trustScore = 350 + earnedPts;
 
-  function verify(id:string){
+  function verify(id:string) {
     setVerifying(id);
     setTimeout(()=>{
       setSteps(p=>p.map(s=>s.id===id?{...s,done:true}:s));
       setVerifying(null);
       setExpanded(null);
-    },2000);
+    }, 2000);
   }
 
   return (
-    <div className="flex min-h-screen"><Sidebar/>
-    <div className="flex-1 flex flex-col"><TopBar/>
-    <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-      <div className="flex items-center gap-3 mb-6"><ShieldCheck className="text-yellow-400" size={28}/><h1 className="text-3xl font-black gold-text">Identity Verification</h1></div>
+    <div style={{display:"flex",minHeight:"100vh",background:"#010812"}}>
+      <Sidebar/>
+      <div style={{flex:1,display:"flex",flexDirection:"column"}}>
+        <TopBar/>
+        <main style={{flex:1,overflowY:"auto",padding:24,color:"white"}}>
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="glass-card rounded-2xl p-5 text-center"><div className="text-3xl font-black gold-text mb-1">{doneCount}/{steps.length}</div><div className="text-xs text-white/50">Steps Complete</div></div>
-        <div className="glass-card rounded-2xl p-5 text-center"><div className="text-3xl font-black text-cyan-400 mb-1">+{totalPts}</div><div className="text-xs text-white/50">TruScore Points Earned</div></div>
-        <div className="glass-card rounded-2xl p-5 text-center"><div className="text-3xl font-black text-green-400 mb-1">{scorePct}%</div><div className="text-xs text-white/50">Verification Complete</div></div>
-      </div>
+          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:24}}>
+            <ShieldCheck size={28} color="#1a6bff"/>
+            <h1 style={{fontSize:"1.8rem",fontWeight:900,margin:0}}>Identity Verification</h1>
+          </div>
 
-      <div className="mb-5 glass-card rounded-2xl p-4">
-        <div className="flex justify-between text-xs mb-1.5"><span className="text-white/50">Verification Progress</span><span className="text-yellow-400 font-bold">{totalPts}/{maxPts} pts</span></div>
-        <div className="h-3 rounded-full bg-white/10 overflow-hidden">
-          <div className="h-full rounded-full bg-gradient-to-r from-yellow-500 to-green-400 transition-all" style={{width:scorePct+"%"}}/>
-        </div>
-      </div>
-
-      <div className="space-y-3 max-w-2xl">
-        {steps.map(s=>{
-          const Icon = s.icon;
-          const isExp = expanded===s.id;
-          return (
-            <div key={s.id} className={"glass-card rounded-2xl border transition "+(s.done?"border-green-500/20":isExp?"border-yellow-500/30":"border-white/5")}>
-              <div className="flex items-center justify-between p-5 cursor-pointer" onClick={()=>!s.done&&setExpanded(isExp?null:s.id)}>
-                <div className="flex items-center gap-4">
-                  <div className={"w-11 h-11 rounded-xl flex items-center justify-center "+(s.done?"bg-green-500/10":"bg-white/5")}>
-                    {s.done?<CheckCircle2 size={20} className="text-green-400"/>:<Icon size={20} className="text-white/50"/>}
-                  </div>
-                  <div>
-                    <div className="font-bold text-sm">{s.label}</div>
-                    <div className="text-xs text-white/40">{s.desc}</div>
-                  </div>
+          {/* Hero + Badge */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:20,marginBottom:20,alignItems:"start"}}>
+            <div style={{background:"rgba(4,15,36,0.95)",border:"1px solid rgba(26,107,255,0.18)",borderRadius:18,padding:22}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}>
+                <div>
+                  <div style={{fontSize:"0.68rem",fontWeight:700,color:"rgba(255,255,255,0.4)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:4}}>Verification Progress</div>
+                  <div style={{fontSize:"2rem",fontWeight:900,color:"#00e676",lineHeight:1,marginBottom:2}}>{doneCount}/{steps.length}</div>
+                  <div style={{fontSize:"0.75rem",color:"rgba(255,255,255,0.45)"}}>steps complete · +{earnedPts} Trust Score pts earned</div>
                 </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <div className="flex items-center gap-1 text-xs text-cyan-400"><Zap size={10}/>{s.points} pts</div>
-                  {s.done?<span className="text-xs text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20">Verified</span>:<span className="text-xs text-white/30">Pending</span>}
+                <div style={{textAlign:"right"}}>
+                  <div style={{fontSize:"2rem",fontWeight:900,color:"#4da6ff"}}>{trustScore}</div>
+                  <div style={{fontSize:"0.7rem",color:"rgba(255,255,255,0.38)"}}>Current Score</div>
+                  <div style={{fontSize:"0.65rem",color:"#00e676",marginTop:2}}>+{totalPts-earnedPts} pts available</div>
                 </div>
               </div>
-              {isExp&&!s.done&&(
-                <div className="px-5 pb-5 border-t border-white/10 pt-4">
-                  <div className="border-2 border-dashed border-white/10 rounded-2xl p-8 text-center mb-4 hover:border-yellow-500/30 transition cursor-pointer">
-                    <Upload size={24} className="text-white/30 mx-auto mb-2"/>
-                    <div className="text-sm text-white/50">Upload document or <span className="text-yellow-400">browse</span></div>
-                    <div className="text-xs text-white/30 mt-1">JPG, PNG, PDF · Max 10MB</div>
-                  </div>
-                  <button onClick={()=>verify(s.id)} disabled={verifying===s.id} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-black font-bold transition disabled:opacity-40">
-                    {verifying===s.id?<><Loader2 size={16} className="animate-spin"/>Verifying...</>:"Submit for Verification"}
-                  </button>
-                </div>
-              )}
+              <div style={{height:8,background:"rgba(26,107,255,0.08)",borderRadius:4,overflow:"hidden",marginBottom:6}}>
+                <div style={{width:`${pct}%`,height:"100%",background:"linear-gradient(90deg,#1a6bff,#00e676)",borderRadius:4,transition:"width 0.8s"}}/>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:"0.65rem",color:"rgba(255,255,255,0.3)"}}>
+                <span>{pct}% complete</span>
+                <span>{totalPts-earnedPts} pts remaining</span>
+              </div>
             </div>
-          );
-        })}
+            <div style={{flexShrink:0}}>
+              <VeritasVerifiedBadge score={trustScore} size={160}/>
+            </div>
+          </div>
+
+          {/* Verification steps */}
+          <div style={{maxWidth:680,display:"flex",flexDirection:"column",gap:10}}>
+            {steps.map(s=>{
+              const Icon = s.icon;
+              const isExp = expanded===s.id;
+              return(
+                <div key={s.id} style={{background:"rgba(4,15,36,0.9)",border:`1px solid ${s.done?"rgba(0,200,83,0.2)":isExp?"rgba(26,107,255,0.35)":"rgba(26,107,255,0.12)"}`,borderRadius:14,overflow:"hidden",transition:"border-color 0.2s"}}>
+                  <div onClick={()=>!s.done&&setExpanded(isExp?null:s.id)} style={{display:"flex",alignItems:"center",gap:14,padding:"16px 18px",cursor:s.done?"default":"pointer"}}>
+                    <div style={{width:44,height:44,borderRadius:12,background:s.done?"rgba(0,200,83,0.1)":"rgba(26,107,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                      {s.done?<CheckCircle2 size={22} color="#00e676"/>:<Icon size={20} color={isExp?"#4da6ff":"rgba(255,255,255,0.4)"}/>}
+                    </div>
+                    <div style={{flex:1}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
+                        <span style={{fontWeight:700,fontSize:"0.92rem",color:s.done?"#00e676":"white"}}>{s.label}</span>
+                        {s.required&&!s.done&&<span style={{fontSize:"0.58rem",padding:"2px 6px",background:"rgba(26,107,255,0.1)",border:"1px solid rgba(26,107,255,0.2)",borderRadius:4,color:"#4da6ff",fontWeight:700}}>REQUIRED</span>}
+                      </div>
+                      <div style={{fontSize:"0.72rem",color:"rgba(255,255,255,0.4)"}}>{s.sub}</div>
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+                      <div style={{textAlign:"right"}}>
+                        <div style={{fontSize:"0.88rem",fontWeight:800,color:s.done?"#00e676":"#4da6ff"}}>+{s.pts} pts</div>
+                      </div>
+                      {s.done?(
+                        <span style={{fontSize:"0.65rem",padding:"3px 8px",background:"rgba(0,200,83,0.1)",border:"1px solid rgba(0,200,83,0.2)",borderRadius:5,color:"#00e676",fontWeight:700}}>Verified</span>
+                      ):(
+                        <span style={{fontSize:"0.65rem",color:"rgba(255,255,255,0.3)"}}>Pending</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {isExp&&!s.done&&(
+                    <div style={{padding:"0 18px 18px",borderTop:"1px solid rgba(26,107,255,0.08)"}}>
+                      <div style={{padding:12,background:"rgba(240,192,64,0.05)",border:"1px solid rgba(240,192,64,0.15)",borderRadius:10,marginBottom:14,fontSize:"0.78rem",color:"rgba(255,255,255,0.55)",lineHeight:1.6,display:"flex",gap:8}}>
+                        <AlertCircle size={14} color="#f0c040" style={{flexShrink:0,marginTop:2}}/><span>Your document is encrypted and processed securely. We never store raw ID images.</span>
+                      </div>
+                      <div style={{border:"2px dashed rgba(26,107,255,0.2)",borderRadius:12,padding:24,textAlign:"center",marginBottom:12,cursor:"pointer",transition:"border-color 0.2s"}}
+                        onMouseEnter={e=>(e.currentTarget.style.borderColor="rgba(26,107,255,0.45)")}
+                        onMouseLeave={e=>(e.currentTarget.style.borderColor="rgba(26,107,255,0.2)")}>
+                        <Upload size={24} color="rgba(255,255,255,0.3)" style={{margin:"0 auto 8px"}}/>
+                        <div style={{fontSize:"0.85rem",color:"rgba(255,255,255,0.5)"}}>Drop file or <span style={{color:"#4da6ff",cursor:"pointer"}}>browse</span></div>
+                        <div style={{fontSize:"0.65rem",color:"rgba(255,255,255,0.3)",marginTop:4}}>JPG, PNG, PDF · Max 10MB</div>
+                      </div>
+                      <button onClick={()=>verify(s.id)} disabled={verifying===s.id} style={{width:"100%",padding:"12px",background:"linear-gradient(135deg,#1a6bff,#0050dd)",border:"none",borderRadius:10,color:"white",fontWeight:700,fontSize:"0.88rem",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,boxShadow:"0 3px 14px rgba(26,107,255,0.35)",opacity:verifying?0.7:1}}>
+                        {verifying===s.id?<><Loader2 size={16} style={{animation:"spin 1s linear infinite"}}/>Verifying...</>:<><ShieldCheck size={16}/>Submit for Verification (+{s.pts} pts)</>}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </main>
       </div>
-    </main></div></div>
+    </div>
   );
 }

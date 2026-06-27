@@ -3,98 +3,119 @@
 import { useState } from "react";
 import Sidebar from "@/components/sidebar/Sidebar";
 import TopBar from "@/components/topbar/TopBar";
-import { Zap, Briefcase, DollarSign, Shield, Star, Clock, TrendingUp, Filter } from "lucide-react";
+import { Zap, Briefcase, DollarSign, Shield, Star, TrendingUp, Award, Clock, Filter, Bell, CheckCircle2 } from "lucide-react";
 
 const FEED = [
-  { type:"job_match",  time:"Just now",  data:{ id:"JB-4508", title:"Senior React Developer", client:"StartupX", budget:"$12,000", match:99, urgent:true }},
-  { type:"payment",    time:"5m ago",    data:{ amount:4500, from:"TechVentures Inc.", escrow:"ESC-8821", milestone:"Milestone 2" }},
-  { type:"score_up",   time:"12m ago",   data:{ from:93, to:94, reason:"5-star review from Bloom Health" }},
-  { type:"job_match",  time:"1h ago",    data:{ id:"JB-4507", title:"ML Engineer — Churn Model", client:"SaaS Growth Labs", budget:"$8,000", match:95, urgent:false }},
-  { type:"review",     time:"2h ago",    data:{ author:"Nadia Rose", company:"Bloom Health", rating:5, text:"Exceptional work!" }},
-  { type:"job_match",  time:"3h ago",    data:{ id:"JB-4506", title:"Video Editor — Product Demo", client:"CloudSync AI", budget:"$5,000", match:92, urgent:false }},
-  { type:"badge",      time:"1d ago",    data:{ badge:"🔥 30-Day Streak", desc:"Active for 30 consecutive days. +2 TruScore bonus." }},
+  {type:"job_match", time:"Just now", urgent:true,  data:{id:"JB-4508",title:"Senior React Developer",client:"StartupX",       budget:"$12,000", match:99}},
+  {type:"payment",   time:"5m ago",  urgent:false, data:{amount:4500,from:"TechVentures Inc.",milestone:"Milestone 2 — Backend API"}},
+  {type:"score_up",  time:"12m ago", urgent:false, data:{from:982,to:990,reason:"5-star review from TechVentures Inc."}},
+  {type:"job_match", time:"1h ago",  urgent:false, data:{id:"JB-4507",title:"ML Engineer — Churn Model",client:"SaaS Growth Labs",budget:"$8,000", match:95}},
+  {type:"badge",     time:"2h ago",  urgent:false, data:{badge:"🏅 30-Day Streak",desc:"Active 30 consecutive days. +20 Trust Score bonus applied."}},
+  {type:"review",    time:"3h ago",  urgent:false, data:{author:"Brian Walsh",company:"TechVentures",rating:5,text:"Exceptional work, delivered a week early!"}},
+  {type:"job_match", time:"4h ago",  urgent:false, data:{id:"JB-4506",title:"Video Editor — Product Demo",client:"CloudSync",   budget:"$5,000", match:92}},
+  {type:"payment",   time:"1d ago",  urgent:false, data:{amount:9800,from:"FinEdge Capital",milestone:"Milestone 1 — Project Setup"}},
 ];
 
-export default function FeedPage() {
-  const [filter,setFilter] = useState("all");
-  const filtered = filter==="all"?FEED:FEED.filter(f=>f.type.startsWith(filter==="jobs"?"job":filter));
+const TYPE_META:Record<string,{icon:React.ReactNode;color:string;bg:string;label:string}> = {
+  job_match: {icon:<Briefcase size={18}/>,  color:"#f0c040",  bg:"rgba(240,192,64,0.1)",  label:"Job Match"},
+  payment:   {icon:<DollarSign size={18}/>, color:"#00e676",  bg:"rgba(0,200,83,0.1)",    label:"Payment"},
+  score_up:  {icon:<TrendingUp size={18}/>, color:"#4da6ff",  bg:"rgba(26,107,255,0.1)",  label:"Trust Score"},
+  badge:     {icon:<Award size={18}/>,      color:"#f0c040",  bg:"rgba(240,192,64,0.08)", label:"Badge"},
+  review:    {icon:<Star size={18}/>,       color:"#a78bfa",  bg:"rgba(167,139,250,0.1)", label:"Review"},
+};
+
+export default function FeedV2Page() {
+  const [filter, setFilter] = useState("all");
+
+  const filtered = filter==="all" ? FEED : FEED.filter(f=>f.type===filter||f.type===filter+"_match");
 
   return (
-    <div className="flex min-h-screen"><Sidebar/>
-    <div className="flex-1 flex flex-col"><TopBar/>
-    <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-      <div className="flex items-center gap-3 mb-6"><Zap className="text-yellow-400" size={28}/><h1 className="text-3xl font-black gold-text">Activity Feed</h1></div>
+    <div style={{display:"flex",minHeight:"100vh",background:"#010812"}}>
+      <Sidebar/>
+      <div style={{flex:1,display:"flex",flexDirection:"column"}}>
+        <TopBar/>
+        <main style={{flex:1,overflowY:"auto",padding:24,color:"white"}}>
 
-      <div className="flex gap-2 mb-6">
-        {[["all","All"],["jobs","Job Matches"],["payment","Payments"],["score","Score Updates"]].map(([v,l])=>(
-          <button key={v} onClick={()=>setFilter(v)} className={"px-4 py-2 rounded-xl text-xs font-medium transition "+(filter===v?"bg-yellow-500/20 text-yellow-400 border border-yellow-500/30":"border border-white/10 text-white/40 hover:text-white")}>{l}</button>
-        ))}
-      </div>
+          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20}}>
+            <Zap size={28} color="#f0c040"/>
+            <h1 style={{fontSize:"1.8rem",fontWeight:900,margin:0}}>Activity Feed</h1>
+            <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:5,padding:"5px 12px",background:"rgba(0,200,83,0.08)",border:"1px solid rgba(0,200,83,0.2)",borderRadius:8}}>
+              <div style={{width:6,height:6,borderRadius:"50%",background:"#00e676",animation:"pulse 1.5s infinite"}}/>
+              <span style={{fontSize:"0.72rem",color:"#00e676",fontWeight:700}}>LIVE</span>
+            </div>
+          </div>
 
-      <div className="max-w-2xl space-y-3">
-        {filtered.map((item,i)=>(
-          <div key={i} className="glass-card rounded-2xl p-5">
-            {item.type==="job_match"&&(
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center flex-shrink-0"><Briefcase size={18} className="text-yellow-400"/></div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs text-yellow-400 font-medium">New Job Match</span>
-                      {"urgent" in item.data&&item.data.urgent&&<span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">⚡ Urgent</span>}
+          {/* Filter chips */}
+          <div style={{display:"flex",gap:7,marginBottom:18,flexWrap:"wrap"}}>
+            {[["all","All"],["job","Jobs"],["payment","Payments"],["score_up","Score"],["badge","Badges"],["review","Reviews"]].map(([v,l])=>(
+              <button key={v} onClick={()=>setFilter(v)} style={{padding:"6px 14px",borderRadius:20,border:`1px solid ${filter===v?"rgba(240,192,64,0.4)":"rgba(26,107,255,0.12)"}`,background:filter===v?"rgba(240,192,64,0.1)":"transparent",color:filter===v?"#f0c040":"rgba(255,255,255,0.45)",fontSize:"0.75rem",fontWeight:600,cursor:"pointer"}}>{l}</button>
+            ))}
+          </div>
+
+          <div style={{maxWidth:680,display:"flex",flexDirection:"column",gap:10}}>
+            {filtered.map((item,i)=>{
+              const meta = TYPE_META[item.type]||TYPE_META.job_match;
+              const d    = item.data as any;
+              return(
+                <div key={i} style={{
+                  background:"rgba(4,15,36,0.9)",
+                  border:`1px solid ${item.urgent?"rgba(240,192,64,0.25)":"rgba(26,107,255,0.1)"}`,
+                  borderRadius:14,padding:"15px 17px",
+                  boxShadow:item.urgent?"0 0 20px rgba(240,192,64,0.06)":"none",
+                }}>
+                  <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
+                    <div style={{width:42,height:42,borderRadius:12,background:meta.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:meta.color}}>{meta.icon}</div>
+                    <div style={{flex:1,minWidth:0}}>
+                      {/* Content per type */}
+                      {item.type==="job_match"&&(
+                        <>
+                          <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:4,flexWrap:"wrap"}}>
+                            <span style={{fontSize:"0.68rem",color:meta.color,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em"}}>New Job Match</span>
+                            {item.urgent&&<span style={{fontSize:"0.58rem",padding:"2px 6px",background:"rgba(240,192,64,0.15)",border:"1px solid rgba(240,192,64,0.3)",borderRadius:4,color:"#f0c040",fontWeight:800}}>⚡ URGENT</span>}
+                          </div>
+                          <div style={{fontWeight:700,fontSize:"0.92rem",marginBottom:3}}>{d.title}</div>
+                          <div style={{fontSize:"0.75rem",color:"rgba(255,255,255,0.5)",marginBottom:8}}>{d.client} · {d.budget}</div>
+                          <button style={{padding:"7px 14px",background:"rgba(240,192,64,0.12)",border:"1px solid rgba(240,192,64,0.28)",borderRadius:8,color:"#f0c040",fontSize:"0.75rem",fontWeight:700,cursor:"pointer"}}>View Job →</button>
+                        </>
+                      )}
+                      {item.type==="payment"&&(
+                        <>
+                          <div style={{fontSize:"0.68rem",color:meta.color,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4}}>Payment Released</div>
+                          <div style={{fontSize:"1.4rem",fontWeight:900,color:"#00e676",lineHeight:1,marginBottom:3}}>${d.amount.toLocaleString()}</div>
+                          <div style={{fontSize:"0.75rem",color:"rgba(255,255,255,0.5)"}}>{d.from} · {d.milestone}</div>
+                        </>
+                      )}
+                      {item.type==="score_up"&&(
+                        <>
+                          <div style={{fontSize:"0.68rem",color:meta.color,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4}}>Trust Score Increased</div>
+                          <div style={{fontWeight:800,fontSize:"0.95rem",marginBottom:3}}>{d.from} <span style={{color:"rgba(255,255,255,0.3)"}}>→</span> <span style={{color:"#00e676"}}>{d.to}</span></div>
+                          <div style={{fontSize:"0.75rem",color:"rgba(255,255,255,0.5)"}}>{d.reason}</div>
+                        </>
+                      )}
+                      {item.type==="badge"&&(
+                        <>
+                          <div style={{fontSize:"0.68rem",color:meta.color,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4}}>Badge Earned</div>
+                          <div style={{fontWeight:800,fontSize:"0.92rem",marginBottom:3}}>{d.badge}</div>
+                          <div style={{fontSize:"0.75rem",color:"rgba(255,255,255,0.5)"}}>{d.desc}</div>
+                        </>
+                      )}
+                      {item.type==="review"&&(
+                        <>
+                          <div style={{fontSize:"0.68rem",color:meta.color,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4}}>New Review</div>
+                          <div style={{display:"flex",gap:1,marginBottom:4}}>{Array.from({length:d.rating}).map((_,k)=><Star key={k} size={13} color="#f0c040" fill="#f0c040"/>)}</div>
+                          <div style={{fontSize:"0.83rem",color:"rgba(255,255,255,0.65)",fontStyle:"italic",marginBottom:3}}>"{d.text}"</div>
+                          <div style={{fontSize:"0.7rem",color:"rgba(255,255,255,0.38)"}}>{d.author}, {d.company}</div>
+                        </>
+                      )}
                     </div>
-                    <div className="font-bold">{"title" in item.data?item.data.title:""}</div>
-                    <div className="text-sm text-white/50">{"client" in item.data?item.data.client:""} · {"budget" in item.data?item.data.budget:""}</div>
-                    <button className="mt-2 text-xs px-3 py-1.5 rounded-lg bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/30 transition">View Job →</button>
+                    <div style={{flexShrink:0,fontSize:"0.65rem",color:"rgba(255,255,255,0.3)",whiteSpace:"nowrap"}}>{item.time}</div>
                   </div>
                 </div>
-                <div className="text-right flex-shrink-0"><div className="text-2xl font-black gold-text">{"match" in item.data?item.data.match:""}%</div><div className="text-xs text-white/40">match · {item.time}</div></div>
-              </div>
-            )}
-            {item.type==="payment"&&(
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center flex-shrink-0"><DollarSign size={18} className="text-green-400"/></div>
-                <div className="flex-1">
-                  <div className="text-xs text-green-400 font-medium mb-0.5">Payment Released</div>
-                  <div className="font-bold text-green-400 text-lg">${"amount" in item.data?item.data.amount:""}</div>
-                  <div className="text-xs text-white/40">{"from" in item.data?item.data.from:""} · {"milestone" in item.data?item.data.milestone:""} · {item.time}</div>
-                </div>
-              </div>
-            )}
-            {item.type==="score_up"&&(
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center flex-shrink-0"><TrendingUp size={18} className="text-cyan-400"/></div>
-                <div>
-                  <div className="text-xs text-cyan-400 font-medium mb-0.5">TruScore Increased</div>
-                  <div className="font-bold">{"from" in item.data?item.data.from:""} <span className="text-white/30">→</span> <span className="gold-text">{"to" in item.data?item.data.to:""}</span></div>
-                  <div className="text-xs text-white/40">{"reason" in item.data?item.data.reason:""} · {item.time}</div>
-                </div>
-              </div>
-            )}
-            {item.type==="review"&&(
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center flex-shrink-0"><Star size={18} className="text-purple-400"/></div>
-                <div className="flex-1">
-                  <div className="text-xs text-purple-400 font-medium mb-1">New Review</div>
-                  <div className="flex gap-0.5 mb-1">{"rating" in item.data&&Array.from({length:item.data.rating}).map((_,k)=><Star key={k} size={12} className="text-yellow-400" fill="currentColor"/>)}</div>
-                  <p className="text-sm text-white/70 italic">{"text" in item.data?'"'+item.data.text+'"':""}</p>
-                  <div className="text-xs text-white/40 mt-1">{"author" in item.data?item.data.author:""}, {"company" in item.data?item.data.company:""} · {item.time}</div>
-                </div>
-              </div>
-            )}
-            {item.type==="badge"&&(
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center text-xl flex-shrink-0">🏅</div>
-                <div>
-                  <div className="text-xs text-yellow-400 font-medium mb-0.5">Badge Earned</div>
-                  <div className="font-bold">{"badge" in item.data?item.data.badge:""}</div>
-                  <div className="text-xs text-white/40">{"desc" in item.data?item.data.desc:""} · {item.time}</div>
-                </div>
-              </div>
-            )}
+              );
+            })}
           </div>
-        ))}
+        </main>
       </div>
-    </main></div></div>
+    </div>
   );
 }

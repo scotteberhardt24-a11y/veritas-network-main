@@ -1,281 +1,123 @@
-"use client";
 
-import { useState, useEffect } from "react";
+"use client";
+import { useState } from "react";
 import Sidebar from "@/components/sidebar/Sidebar";
 import TopBar from "@/components/topbar/TopBar";
-import {
-  Trophy,
-  Shield,
-  Star,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  Crown,
-  Zap,
-  Globe,
-  Filter,
-  Search,
-} from "lucide-react";
+import { VeritasVerifiedBadge, VeritasEmblem } from "@/components/badges/VeritasBadges";
+import { Trophy, Shield, TrendingUp, TrendingDown, Minus, Crown, Search, Zap, Clock } from "lucide-react";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "https://veritas-trust-ledger-production.up.railway.app";
-
-const CATEGORIES = ["All", "Development", "Design", "Writing", "Marketing", "Consulting", "Video"];
-const TIME_FILTERS = ["All Time", "This Month", "This Week"];
-
-const MOCK_LEADERS = [
-  { rank: 1, prev: 1, name: "Alex Chen", username: "alexchen.dev", score: 99, category: "Development", jobs: 247, earnings: 184500, badge: "🏆", verified: true, streak: 30 },
-  { rank: 2, prev: 3, name: "Maya Rodriguez", username: "maya.designs", score: 98, category: "Design", jobs: 189, earnings: 142000, badge: "🥈", verified: true, streak: 22 },
-  { rank: 3, prev: 2, name: "James Park", username: "jpark.writes", score: 97, category: "Writing", jobs: 312, earnings: 98700, badge: "🥉", verified: true, streak: 45 },
-  { rank: 4, prev: 6, name: "Priya Sharma", username: "priyadev", score: 96, category: "Development", jobs: 156, earnings: 221000, badge: "⭐", verified: true, streak: 18 },
-  { rank: 5, prev: 4, name: "David Okonkwo", username: "david.mktg", score: 95, category: "Marketing", jobs: 203, earnings: 87400, badge: "⭐", verified: true, streak: 29 },
-  { rank: 6, prev: 7, name: "Lena Fischer", username: "lena.ux", score: 94, category: "Design", jobs: 178, earnings: 156300, badge: "⭐", verified: true, streak: 12 },
-  { rank: 7, prev: 5, name: "Rahul Mehta", username: "rahulmehta", score: 93, category: "Consulting", jobs: 94, earnings: 312000, badge: "⭐", verified: true, streak: 8 },
-  { rank: 8, prev: 9, name: "Sofia Torres", username: "sofia.vid", score: 92, category: "Video", jobs: 267, earnings: 124500, badge: "⭐", verified: false, streak: 14 },
-  { rank: 9, prev: 8, name: "Marcus Johnson", username: "mjohnson.dev", score: 91, category: "Development", jobs: 198, earnings: 178900, badge: "⭐", verified: true, streak: 6 },
-  { rank: 10, prev: 11, name: "Yuki Tanaka", username: "yuki.writes", score: 90, category: "Writing", jobs: 445, earnings: 76300, badge: "⭐", verified: true, streak: 21 },
-  { rank: 11, prev: 10, name: "Carlos Lima", username: "carloslima", score: 89, category: "Marketing", jobs: 167, earnings: 98200, badge: "⭐", verified: false, streak: 9 },
-  { rank: 12, prev: 14, name: "Aisha Diallo", username: "aisha.design", score: 88, category: "Design", jobs: 132, earnings: 112400, badge: "⭐", verified: true, streak: 15 },
+const LEADERS = [
+  {rank:1, prev:1,  name:"Alex Chen",     username:"alexchen.dev",  score:990, cat:"Development", jobs:247, earnings:184500, verified:true,  streak:30, badge:"🥇"},
+  {rank:2, prev:3,  name:"Maya Rodriguez",username:"maya.designs",  score:980, cat:"Design",       jobs:189, earnings:142000, verified:true,  streak:22, badge:"🥈"},
+  {rank:3, prev:2,  name:"James Park",    username:"jpark.writes",  score:970, cat:"Writing",      jobs:312, earnings:98700,  verified:true,  streak:45, badge:"🥉"},
+  {rank:4, prev:6,  name:"Priya Sharma",  username:"priyadev",      score:960, cat:"Development", jobs:156, earnings:221000, verified:true,  streak:18, badge:"⭐"},
+  {rank:5, prev:4,  name:"David Okonkwo", username:"david.mktg",    score:950, cat:"Marketing",   jobs:203, earnings:87400,  verified:true,  streak:29, badge:"⭐"},
+  {rank:6, prev:7,  name:"Lena Fischer",  username:"lena.ux",       score:940, cat:"Design",       jobs:178, earnings:156300, verified:true,  streak:12, badge:"⭐"},
+  {rank:7, prev:5,  name:"Rahul Mehta",   username:"rahulmehta",    score:930, cat:"Consulting",   jobs:94,  earnings:312000, verified:true,  streak:8,  badge:"⭐"},
+  {rank:8, prev:9,  name:"Sofia Torres",  username:"sofia.vid",     score:920, cat:"Video",        jobs:267, earnings:124500, verified:false, streak:14, badge:"⭐"},
+  {rank:9, prev:8,  name:"Marcus Johnson",username:"mjohnson.dev",  score:910, cat:"Development", jobs:198, earnings:178900, verified:true,  streak:6,  badge:"⭐"},
+  {rank:10,prev:11, name:"Yuki Tanaka",   username:"yuki.writes",   score:900, cat:"Writing",      jobs:445, earnings:76300,  verified:true,  streak:21, badge:"⭐"},
 ];
 
-type Leader = typeof MOCK_LEADERS[0];
+const CATS = ["All","Development","Design","Writing","Marketing","Video","Consulting"];
 
-function RankChange({ rank, prev }: { rank: number; prev: number }) {
-  const diff = prev - rank;
-  if (diff > 0) return <div className="flex items-center gap-1 text-green-400 text-xs"><TrendingUp size={12} />+{diff}</div>;
-  if (diff < 0) return <div className="flex items-center gap-1 text-red-400 text-xs"><TrendingDown size={12} />{diff}</div>;
-  return <div className="flex items-center gap-1 text-white/30 text-xs"><Minus size={12} /></div>;
+function Delta({r,p}:{r:number;p:number}){
+  const d=p-r;
+  if(d>0) return <div style={{display:"flex",alignItems:"center",gap:2,color:"#00e676",fontSize:"0.65rem",fontWeight:700}}><TrendingUp size={11}/>+{d}</div>;
+  if(d<0) return <div style={{display:"flex",alignItems:"center",gap:2,color:"#ff5555",fontSize:"0.65rem",fontWeight:700}}><TrendingDown size={11}/>{d}</div>;
+  return <div style={{display:"flex",alignItems:"center",color:"rgba(255,255,255,0.3)",fontSize:"0.65rem"}}><Minus size={11}/></div>;
 }
 
-function ScoreRing({ score }: { score: number }) {
-  const r = 20;
-  const circ = 2 * Math.PI * r;
-  const offset = circ - (score / 100) * circ;
-  return (
-    <div className="relative w-14 h-14 flex items-center justify-center">
-      <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 56 56">
-        <circle cx={28} cy={28} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={4} />
-        <circle cx={28} cy={28} r={r} fill="none" stroke={score >= 90 ? "#d4af37" : score >= 75 ? "#06b6d4" : "#a1a1aa"} strokeWidth={4} strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" />
-      </svg>
-      <span className="text-xs font-bold gold-text">{score}</span>
-    </div>
-  );
-}
-
-export default function LeaderboardPage() {
-  const [category, setCategory] = useState("All");
-  const [timeFilter, setTimeFilter] = useState("All Time");
+export default function LeaderboardV2Page() {
+  const [cat, setCat]     = useState("All");
   const [search, setSearch] = useState("");
-  const [leaders, setLeaders] = useState<Leader[]>(MOCK_LEADERS);
+  const [period, setPeriod] = useState("All Time");
 
-  useEffect(() => {
-    // Try live API, fall back to mock
-    const token = localStorage.getItem("veritas_token");
-    if (!token) return;
-    fetch(`${API}/api/trust/leaderboard`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.json())
-      .then((d) => d.data?.length && setLeaders(d.data))
-      .catch(() => {});
-  }, [category, timeFilter]);
-
-  const filtered = leaders.filter((l) => {
-    const matchCat = category === "All" || l.category === category;
-    const matchSearch =
-      !search ||
-      l.name.toLowerCase().includes(search.toLowerCase()) ||
-      l.username.toLowerCase().includes(search.toLowerCase());
-    return matchCat && matchSearch;
+  const filtered = LEADERS.filter(l=>{
+    const matchCat    = cat==="All"||l.cat===cat;
+    const matchSearch = !search||l.name.toLowerCase().includes(search.toLowerCase())||l.username.toLowerCase().includes(search.toLowerCase());
+    return matchCat&&matchSearch;
   });
 
-  const top3 = filtered.slice(0, 3);
-  const rest = filtered.slice(3);
+  const top3 = filtered.slice(0,3);
+  const rest  = filtered.slice(3);
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <TopBar />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-2">
-              <Trophy className="text-yellow-400" size={28} />
-              <h1 className="text-3xl font-black gold-text">TruScore Leaderboard</h1>
-            </div>
-            <p className="text-white/50">The most trusted professionals on the Veritas Network</p>
+    <div style={{display:"flex",minHeight:"100vh",background:"#010812"}}>
+      <Sidebar/>
+      <div style={{flex:1,display:"flex",flexDirection:"column"}}>
+        <TopBar/>
+        <main style={{flex:1,overflowY:"auto",padding:24,color:"white"}}>
+
+          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:24}}>
+            <Trophy size={28} color="#f0c040"/>
+            <h1 style={{fontSize:"1.8rem",fontWeight:900,margin:0}}>Trust Score Leaderboard</h1>
           </div>
 
           {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-8">
-            <div className="relative flex-1 max-w-sm">
-              <Search size={16} className="absolute left-4 top-3.5 text-white/40" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search professionals..."
-                className="veritas-input pl-10 py-3 text-sm"
-              />
+          <div style={{display:"flex",gap:10,marginBottom:16,flexWrap:"wrap",alignItems:"center"}}>
+            <div style={{position:"relative",flex:1,maxWidth:280}}>
+              <Search size={14} style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"rgba(255,255,255,0.3)"}}/>
+              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search professionals..." style={{width:"100%",padding:"10px 12px 10px 34px",background:"rgba(6,18,41,0.8)",border:"1px solid rgba(26,107,255,0.18)",borderRadius:9,color:"white",fontSize:"0.85rem",outline:"none"}}/>
             </div>
-            <div className="flex gap-2 flex-wrap">
-              {CATEGORIES.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setCategory(c)}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
-                    category === c
-                      ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                      : "border border-white/10 text-white/50 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  {c}
-                </button>
-              ))}
+            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+              {CATS.map(c=><button key={c} onClick={()=>setCat(c)} style={{padding:"7px 12px",borderRadius:18,border:`1px solid ${cat===c?"rgba(240,192,64,0.4)":"rgba(26,107,255,0.12)"}`,background:cat===c?"rgba(240,192,64,0.1)":"transparent",color:cat===c?"#f0c040":"rgba(255,255,255,0.45)",fontSize:"0.74rem",fontWeight:600,cursor:"pointer"}}>{c}</button>)}
             </div>
-            <div className="flex gap-2">
-              {TIME_FILTERS.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTimeFilter(t)}
-                  className={`px-3 py-2 rounded-xl text-xs transition ${
-                    timeFilter === t
-                      ? "bg-white/10 text-white"
-                      : "text-white/40 hover:text-white"
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
+            <div style={{display:"flex",gap:5}}>
+              {["All Time","This Month","This Week"].map(t=><button key={t} onClick={()=>setPeriod(t)} style={{padding:"7px 11px",borderRadius:8,border:`1px solid ${period===t?"rgba(26,107,255,0.35)":"rgba(26,107,255,0.1)"}`,background:period===t?"rgba(26,107,255,0.1)":"transparent",color:period===t?"#4da6ff":"rgba(255,255,255,0.38)",fontSize:"0.72rem",cursor:"pointer"}}>{t}</button>)}
             </div>
           </div>
 
-          {/* Podium Top 3 */}
-          {top3.length >= 3 && (
-            <div className="flex items-end justify-center gap-4 mb-10">
+          {/* Podium */}
+          {top3.length>=3&&(
+            <div style={{display:"flex",justifyContent:"center",alignItems:"flex-end",gap:16,marginBottom:24,padding:"0 20px"}}>
               {/* 2nd */}
-              <div className="flex flex-col items-center gap-3 w-36">
-                <div className="relative">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-slate-400 to-slate-600 flex items-center justify-center text-2xl font-black text-white">
-                    {top3[1].name[0]}
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-slate-500 flex items-center justify-center text-xs font-bold">2</div>
-                </div>
-                <div className="text-center">
-                  <div className="font-bold text-sm">{top3[1].name}</div>
-                  <div className="text-xs text-white/40">@{top3[1].username}</div>
-                  <div className="text-xl font-black gold-text mt-1">{top3[1].score}</div>
-                </div>
-                <div className="w-full h-20 bg-gradient-to-t from-slate-700/40 to-transparent rounded-t-xl flex items-center justify-center">
-                  <span className="text-3xl">🥈</span>
-                </div>
+              <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,width:140}}>
+                <div style={{width:72,height:72,borderRadius:18,background:"linear-gradient(135deg,#6b7280,#4b5563)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:"1.5rem",border:"3px solid rgba(255,255,255,0.2)"}}>{top3[1].name[0]}</div>
+                <div style={{textAlign:"center"}}><div style={{fontWeight:800,fontSize:"0.88rem"}}>{top3[1].name}</div><div style={{fontSize:"0.65rem",color:"rgba(255,255,255,0.4)"}}>@{top3[1].username}</div><div style={{fontSize:"1.2rem",fontWeight:900,color:"#00e676",marginTop:3}}>{top3[1].score}</div></div>
+                <div style={{width:"100%",height:80,background:"linear-gradient(180deg,rgba(107,114,128,0.3),rgba(75,85,99,0.2))",borderRadius:"8px 8px 0 0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"2rem"}}>🥈</div>
               </div>
-
               {/* 1st */}
-              <div className="flex flex-col items-center gap-3 w-40">
-                <Crown size={28} className="text-yellow-400" />
-                <div className="relative">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-3xl font-black text-black veritas-glow">
-                    {top3[0].name[0]}
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-xs font-bold text-black">1</div>
+              <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,width:160}}>
+                <Crown size={26} color="#f0c040"/>
+                <div style={{position:"relative"}}>
+                  <div style={{width:86,height:86,borderRadius:20,background:"linear-gradient(135deg,#d4af37,#c9a227)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:"1.8rem",border:"3px solid #f0c040",boxShadow:"0 0 30px rgba(212,175,55,0.4)"}}>{top3[0].name[0]}</div>
                 </div>
-                <div className="text-center">
-                  <div className="font-bold">{top3[0].name}</div>
-                  <div className="text-xs text-white/40">@{top3[0].username}</div>
-                  <div className="text-2xl font-black gold-text mt-1">{top3[0].score}</div>
-                </div>
-                <div className="w-full h-32 bg-gradient-to-t from-yellow-500/20 to-transparent rounded-t-xl flex items-center justify-center">
-                  <span className="text-4xl">🏆</span>
-                </div>
+                <div style={{textAlign:"center"}}><div style={{fontWeight:900,fontSize:"0.95rem"}}>{top3[0].name}</div><div style={{fontSize:"0.65rem",color:"rgba(255,255,255,0.4)"}}>@{top3[0].username}</div><div style={{fontSize:"1.5rem",fontWeight:900,color:"#f0c040",marginTop:3}}>{top3[0].score}</div></div>
+                <div style={{width:"100%",height:120,background:"linear-gradient(180deg,rgba(212,175,55,0.2),rgba(201,162,39,0.08))",borderRadius:"8px 8px 0 0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"2.5rem"}}>🏆</div>
               </div>
-
               {/* 3rd */}
-              <div className="flex flex-col items-center gap-3 w-36">
-                <div className="relative">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-700 to-amber-900 flex items-center justify-center text-2xl font-black text-white">
-                    {top3[2].name[0]}
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-amber-700 flex items-center justify-center text-xs font-bold">3</div>
-                </div>
-                <div className="text-center">
-                  <div className="font-bold text-sm">{top3[2].name}</div>
-                  <div className="text-xs text-white/40">@{top3[2].username}</div>
-                  <div className="text-xl font-black gold-text mt-1">{top3[2].score}</div>
-                </div>
-                <div className="w-full h-12 bg-gradient-to-t from-amber-700/30 to-transparent rounded-t-xl flex items-center justify-center">
-                  <span className="text-3xl">🥉</span>
-                </div>
+              <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,width:140}}>
+                <div style={{width:72,height:72,borderRadius:18,background:"linear-gradient(135deg,#92400e,#78350f)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:"1.5rem",border:"3px solid rgba(180,120,40,0.4)"}}>{top3[2].name[0]}</div>
+                <div style={{textAlign:"center"}}><div style={{fontWeight:800,fontSize:"0.88rem"}}>{top3[2].name}</div><div style={{fontSize:"0.65rem",color:"rgba(255,255,255,0.4)"}}>@{top3[2].username}</div><div style={{fontSize:"1.2rem",fontWeight:900,color:"#00e676",marginTop:3}}>{top3[2].score}</div></div>
+                <div style={{width:"100%",height:56,background:"linear-gradient(180deg,rgba(146,64,14,0.3),rgba(120,53,15,0.15))",borderRadius:"8px 8px 0 0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"2rem"}}>🥉</div>
               </div>
             </div>
           )}
 
-          {/* Full Table */}
-          <div className="glass-card rounded-3xl overflow-hidden">
-            <div className="grid grid-cols-12 px-6 py-3 text-xs text-white/40 uppercase tracking-wide border-b border-white/10">
-              <div className="col-span-1">Rank</div>
-              <div className="col-span-4">Professional</div>
-              <div className="col-span-2">TruScore</div>
-              <div className="col-span-2 hidden sm:block">Category</div>
-              <div className="col-span-1 hidden md:block">Jobs</div>
-              <div className="col-span-2 hidden lg:block">Earnings</div>
+          {/* Table */}
+          <div style={{background:"rgba(4,15,36,0.9)",border:"1px solid rgba(26,107,255,0.14)",borderRadius:16,overflow:"hidden"}}>
+            <div style={{display:"grid",gridTemplateColumns:"60px 1fr 80px 1fr 80px 120px",padding:"10px 18px",fontSize:"0.62rem",fontWeight:700,color:"rgba(255,255,255,0.35)",textTransform:"uppercase",letterSpacing:"0.08em",borderBottom:"1px solid rgba(26,107,255,0.1)"}}>
+              <div>Rank</div><div>Professional</div><div style={{textAlign:"center"}}>Score</div><div>Category</div><div style={{textAlign:"center"}}>Jobs</div><div style={{textAlign:"right"}}>Earnings</div>
             </div>
-
-            {rest.map((leader) => (
-              <div
-                key={leader.rank}
-                className="grid grid-cols-12 px-6 py-4 border-b border-white/5 hover:bg-white/3 transition items-center cursor-pointer"
-              >
-                {/* Rank */}
-                <div className="col-span-1">
-                  <div className="flex flex-col items-start gap-1">
-                    <span className="font-bold text-white/80">#{leader.rank}</span>
-                    <RankChange rank={leader.rank} prev={leader.prev} />
-                  </div>
+            {rest.map(l=>(
+              <div key={l.rank} style={{display:"grid",gridTemplateColumns:"60px 1fr 80px 1fr 80px 120px",padding:"13px 18px",borderBottom:"1px solid rgba(26,107,255,0.06)",alignItems:"center"}}>
+                <div>
+                  <div style={{fontWeight:800,fontSize:"1rem",color:"rgba(255,255,255,0.7)"}}>#{l.rank}</div>
+                  <Delta r={l.rank} p={l.prev}/>
                 </div>
-
-                {/* Name */}
-                <div className="col-span-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-500/20 to-cyan-500/20 flex items-center justify-center font-bold text-sm flex-shrink-0">
-                    {leader.name[0]}
-                  </div>
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <div style={{width:38,height:38,borderRadius:10,background:"linear-gradient(135deg,#1a3a6b,#0d1f3d)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:"0.88rem",flexShrink:0}}>{l.name[0]}</div>
                   <div>
-                    <div className="flex items-center gap-2 font-semibold text-sm">
-                      {leader.name}
-                      {leader.verified && (
-                        <Shield size={12} className="text-yellow-400" />
-                      )}
-                    </div>
-                    <div className="text-xs text-white/40">@{leader.username}</div>
-                    {leader.streak >= 14 && (
-                      <div className="flex items-center gap-1 text-xs text-orange-400 mt-0.5">
-                        <Zap size={10} />
-                        {leader.streak}d streak
-                      </div>
-                    )}
+                    <div style={{fontWeight:700,fontSize:"0.88rem",display:"flex",alignItems:"center",gap:5}}>{l.name}{l.verified&&<Shield size={11} color="#1a6bff"/>}</div>
+                    <div style={{fontSize:"0.65rem",color:"rgba(255,255,255,0.38)"}}>@{l.username}</div>
+                    {l.streak>=14&&<div style={{fontSize:"0.6rem",color:"#ff6600",display:"flex",alignItems:"center",gap:3}}><Zap size={9}/>{l.streak}d streak</div>}
                   </div>
                 </div>
-
-                {/* Score */}
-                <div className="col-span-2">
-                  <ScoreRing score={leader.score} />
-                </div>
-
-                {/* Category */}
-                <div className="col-span-2 hidden sm:block">
-                  <span className="text-xs px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/60">
-                    {leader.category}
-                  </span>
-                </div>
-
-                {/* Jobs */}
-                <div className="col-span-1 hidden md:block text-sm text-white/60">
-                  {leader.jobs}
-                </div>
-
-                {/* Earnings */}
-                <div className="col-span-2 hidden lg:block text-sm font-semibold text-green-400">
-                  ${leader.earnings.toLocaleString()}
-                </div>
+                <div style={{textAlign:"center",fontWeight:900,fontSize:"1.1rem",color:"#00e676"}}>{l.score}</div>
+                <div><span style={{fontSize:"0.68rem",padding:"3px 8px",background:"rgba(26,107,255,0.07)",border:"1px solid rgba(26,107,255,0.14)",borderRadius:5,color:"rgba(255,255,255,0.55)"}}>{l.cat}</span></div>
+                <div style={{textAlign:"center",fontSize:"0.85rem",color:"rgba(255,255,255,0.6)"}}>{l.jobs}</div>
+                <div style={{textAlign:"right",fontWeight:700,color:"#00e676",fontSize:"0.88rem"}}>${l.earnings.toLocaleString()}</div>
               </div>
             ))}
           </div>
