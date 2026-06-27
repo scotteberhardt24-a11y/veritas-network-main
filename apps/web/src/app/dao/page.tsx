@@ -1,350 +1,147 @@
-"use client";
 
+"use client";
 import { useState } from "react";
 import Sidebar from "@/components/sidebar/Sidebar";
 import TopBar from "@/components/topbar/TopBar";
-import {
-  Vote,
-  Plus,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  TrendingUp,
-  Coins,
-  Users,
-  Shield,
-  ChevronRight,
-  X,
-  Loader2,
-  AlertCircle,
-  BarChart3,
-  Wallet,
-} from "lucide-react";
+import { VeritasEmblem } from "@/components/badges/VeritasBadges";
+import { Vote, Plus, CheckCircle2, XCircle, Clock, Coins, Users, Shield, Loader2, X, AlertCircle, BarChart3 } from "lucide-react";
 
-type ProposalStatus = "active" | "passed" | "failed" | "pending";
-
-interface Proposal {
-  id: string;
-  title: string;
-  description: string;
-  proposer: string;
-  status: ProposalStatus;
-  votesFor: number;
-  votesAgainst: number;
-  abstain: number;
-  quorum: number;
-  deadline: string;
-  category: string;
-  myVote?: "for" | "against" | "abstain";
-  impact: string;
-}
-
-const MOCK_PROPOSALS: Proposal[] = [
-  {
-    id: "VIP-042",
-    title: "Reduce Platform Fee from 2.5% to 2.0% for Elite Members",
-    description: "Proposal to lower the platform fee for users with TruScore 90+ from 2.5% to 2.0% to incentivize high-quality work and reward top performers.",
-    proposer: "Alex Chen (Score: 99)",
-    status: "active",
-    votesFor: 8420,
-    votesAgainst: 2130,
-    abstain: 450,
-    quorum: 75,
-    deadline: "Jul 22, 2026",
-    category: "Economics",
-    impact: "Est. $240K annual fee reduction distributed to Elite tier",
-  },
-  {
-    id: "VIP-041",
-    title: "Increase Dispute Resolution Panel from 3 to 5 Members",
-    description: "Expand the dispute resolution panel from 3 to 5 randomly selected, verified arbitrators to reduce bias and improve outcomes.",
-    proposer: "Priya Sharma (Score: 96)",
-    status: "active",
-    votesFor: 11200,
-    votesAgainst: 890,
-    abstain: 320,
-    quorum: 85,
-    deadline: "Jul 19, 2026",
-    category: "Governance",
-    impact: "Affects all dispute resolutions platform-wide",
-  },
-  {
-    id: "VIP-040",
-    title: "Launch Veritas Grants Program ($500K Treasury Allocation)",
-    description: "Allocate $500,000 from the DAO treasury to fund open-source tools, integrations, and community projects that benefit the Veritas ecosystem.",
-    proposer: "Maya Rodriguez (Score: 98)",
-    status: "passed",
-    votesFor: 14800,
-    votesAgainst: 1200,
-    abstain: 600,
-    quorum: 90,
-    deadline: "Jul 10, 2026",
-    category: "Treasury",
-    impact: "$500K deployed to 20+ ecosystem projects",
-    myVote: "for",
-  },
-  {
-    id: "VIP-039",
-    title: "Mandatory Video Verification for $10K+ Contracts",
-    description: "Require both parties to complete a 2-minute video verification before contracts exceeding $10,000 can be executed.",
-    proposer: "James Park (Score: 97)",
-    status: "failed",
-    votesFor: 4200,
-    votesAgainst: 9100,
-    abstain: 800,
-    quorum: 65,
-    deadline: "Jul 5, 2026",
-    category: "Security",
-    impact: "Would affect ~15% of contracts on platform",
-    myVote: "against",
-  },
-  {
-    id: "VIP-043",
-    title: "Add Native USDC Payment Support",
-    description: "Integrate native USDC stablecoin payments across all escrow contracts, enabling crypto-native freelancers to receive payments without conversion.",
-    proposer: "David Okonkwo (Score: 95)",
-    status: "pending",
-    votesFor: 0,
-    votesAgainst: 0,
-    abstain: 0,
-    quorum: 70,
-    deadline: "Aug 1, 2026",
-    category: "Feature",
-    impact: "Enables $0 conversion fees for crypto payments",
-  },
+const PROPOSALS = [
+  { id:"VIP-042", title:"Reduce Platform Fee to 1.5% for Trust Score 900+", category:"Economics", status:"active",   proposer:"Alex Chen",   for:8420,  against:2130, abstain:450,  quorum:75, deadline:"Jul 22", impact:"Est. $240K annual fee reduction", myVote:null   },
+  { id:"VIP-041", title:"Expand Dispute Panel from 3 to 5 Arbitrators",     category:"Governance",status:"active",   proposer:"Priya Sharma",for:11200, against:890,  abstain:320,  quorum:85, deadline:"Jul 19", impact:"Affects all dispute resolutions", myVote:null   },
+  { id:"VIP-040", title:"Launch Veritas Grants Program ($500K Treasury)",   category:"Treasury",  status:"passed",   proposer:"Maya Rodriguez",for:14800,against:1200,abstain:600, quorum:90, deadline:"Jul 10", impact:"$500K for 20+ projects",          myVote:"for"  },
+  { id:"VIP-039", title:"Mandatory Video Verification for $10K+ Contracts", category:"Security",  status:"failed",   proposer:"James Park",  for:4200,  against:9100, abstain:800,  quorum:65, deadline:"Jul 5",  impact:"~15% of contracts affected",     myVote:"against"},
 ];
 
-const TREASURY = {
-  total: 4200000,
-  allocated: 980000,
-  earned: 12400000,
-  distributed: 11200000,
+const STATUS_META:Record<string,{color:string;bg:string;label:string}> = {
+  active: {color:"#f0c040",bg:"rgba(240,192,64,0.1)",label:"Voting Active"},
+  passed: {color:"#00e676",bg:"rgba(0,200,83,0.1)",  label:"Passed"},
+  failed: {color:"#ff5555",bg:"rgba(255,85,85,0.1)", label:"Failed"},
 };
 
-const STATUS_META: Record<ProposalStatus, { label: string; color: string; bg: string; icon: React.ElementType }> = {
-  active: { label: "Voting Active", color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/20", icon: Vote },
-  passed: { label: "Passed", color: "text-green-400", bg: "bg-green-500/10 border-green-500/20", icon: CheckCircle2 },
-  failed: { label: "Failed", color: "text-red-400", bg: "bg-red-500/10 border-red-500/20", icon: XCircle },
-  pending: { label: "Pending Review", color: "text-white/50", bg: "bg-white/5 border-white/10", icon: Clock },
-};
-
-export default function DAOPage() {
-  const [proposals, setProposals] = useState<Proposal[]>(MOCK_PROPOSALS);
-  const [filter, setFilter] = useState<"all" | ProposalStatus>("all");
+export default function DAOv2Page() {
+  const [proposals, setProposals] = useState(PROPOSALS);
+  const [filter, setFilter]       = useState<"all"|"active"|"passed"|"failed">("all");
   const [showCreate, setShowCreate] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
-  const [newDesc, setNewDesc] = useState("");
-  const [newCategory, setNewCategory] = useState("Governance");
-  const [voting, setVoting] = useState<string | null>(null);
+  const [newTitle, setNewTitle]   = useState("");
+  const [newDesc, setNewDesc]     = useState("");
+  const [newCat, setNewCat]       = useState("Governance");
+  const [voting, setVoting]       = useState<string|null>(null);
+  const myPower = 94;
 
-  const myVotingPower = 94; // TruScore = voting power
-  const activeCount = proposals.filter((p) => p.status === "active").length;
-
-  function vote(proposalId: string, choice: "for" | "against" | "abstain") {
-    setVoting(proposalId + choice);
-    setTimeout(() => {
-      setProposals((prev) =>
-        prev.map((p) => {
-          if (p.id !== proposalId) return p;
-          const update = { ...p, myVote: choice } as Proposal;
-          if (choice === "for") update.votesFor += myVotingPower;
-          if (choice === "against") update.votesAgainst += myVotingPower;
-          if (choice === "abstain") update.abstain += myVotingPower;
-          return update;
-        })
-      );
+  function vote(id:string, choice:"for"|"against"|"abstain") {
+    setVoting(id+choice);
+    setTimeout(()=>{
+      setProposals(p=>p.map(pr=>{
+        if(pr.id!==id) return pr;
+        const u={...pr,myVote:choice};
+        if(choice==="for") u.for+=myPower;
+        else if(choice==="against") u.against+=myPower;
+        else u.abstain+=myPower;
+        return u;
+      }));
       setVoting(null);
-    }, 700);
+    },800);
   }
 
-  function submitProposal() {
-    if (!newTitle || !newDesc) return;
-    const p: Proposal = {
-      id: `VIP-0${44 + proposals.length}`,
-      title: newTitle,
-      description: newDesc,
-      proposer: "You (Score: 87)",
-      status: "pending",
-      votesFor: 0,
-      votesAgainst: 0,
-      abstain: 0,
-      quorum: 70,
-      deadline: "TBD",
-      category: newCategory,
-      impact: "To be determined by community",
-    };
-    setProposals((prev) => [p, ...prev]);
-    setNewTitle("");
-    setNewDesc("");
-    setShowCreate(false);
-  }
-
-  const filtered = filter === "all" ? proposals : proposals.filter((p) => p.status === filter);
+  const filtered = filter==="all" ? proposals : proposals.filter(p=>p.status===filter);
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <TopBar />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <Vote className="text-yellow-400" size={28} />
-                <h1 className="text-3xl font-black gold-text">DAO Governance</h1>
-              </div>
-              <p className="text-white/50">Shape the future of the Veritas platform with your vote</p>
+    <div style={{display:"flex",minHeight:"100vh",background:"#010812"}}>
+      <Sidebar/>
+      <div style={{flex:1,display:"flex",flexDirection:"column"}}>
+        <TopBar/>
+        <main style={{flex:1,overflowY:"auto",padding:24,color:"white"}}>
+
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24,flexWrap:"wrap",gap:12}}>
+            <div style={{display:"flex",alignItems:"center",gap:12}}>
+              <Vote size={28} color="#1a6bff"/>
+              <h1 style={{fontSize:"1.8rem",fontWeight:900,margin:0}}>DAO Governance</h1>
             </div>
-            <button
-              onClick={() => setShowCreate(true)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-black font-bold transition"
-            >
-              <Plus size={18} />
-              New Proposal
+            <button onClick={()=>setShowCreate(true)} style={{display:"flex",alignItems:"center",gap:7,padding:"11px 20px",background:"linear-gradient(135deg,#1a6bff,#0050dd)",border:"none",borderRadius:10,color:"white",fontWeight:700,fontSize:"0.88rem",cursor:"pointer",boxShadow:"0 3px 14px rgba(26,107,255,0.35)"}}>
+              <Plus size={17}/> Submit Proposal
             </button>
           </div>
 
-          {/* Stats Row */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {/* Stats */}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:20}}>
             {[
-              { icon: Vote, label: "Active Proposals", value: activeCount, color: "text-yellow-400" },
-              { icon: Wallet, label: "Your Voting Power", value: `${myVotingPower} VP`, color: "text-cyan-400" },
-              { icon: Coins, label: "Treasury", value: `$${(TREASURY.total / 1000000).toFixed(1)}M`, color: "text-green-400" },
-              { icon: Users, label: "DAO Members", value: "8,241", color: "text-purple-400" },
-            ].map((s, i) => {
-              const Icon = s.icon;
-              return (
-                <div key={i} className="glass-card rounded-2xl p-5">
-                  <Icon size={20} className={s.color} />
-                  <div className="text-2xl font-black mt-3 mb-1">{s.value}</div>
-                  <div className="text-xs text-white/50">{s.label}</div>
-                </div>
-              );
-            })}
+              {icon:<Vote size={20}/>,   label:"Active Votes",    value:proposals.filter(p=>p.status==="active").length, color:"#f0c040"},
+              {icon:<Shield size={20}/>, label:"Your Voting Power",value:`${myPower} VP`,   color:"#4da6ff"},
+              {icon:<Coins size={20}/>,  label:"Treasury",        value:"$4.2M",            color:"#00e676"},
+              {icon:<Users size={20}/>,  label:"DAO Members",     value:"8,241",            color:"#00d4ff"},
+            ].map((s,i)=>(
+              <div key={i} style={{background:"rgba(4,15,36,0.9)",border:"1px solid rgba(26,107,255,0.14)",borderRadius:14,padding:"18px 16px"}}>
+                <div style={{color:s.color,marginBottom:8}}>{s.icon}</div>
+                <div style={{fontSize:"1.7rem",fontWeight:900,color:s.color,lineHeight:1,marginBottom:3}}>{s.value}</div>
+                <div style={{fontSize:"0.7rem",color:"rgba(255,255,255,0.4)"}}>{s.label}</div>
+              </div>
+            ))}
           </div>
 
-          {/* Treasury Breakdown */}
-          <div className="glass-card rounded-2xl p-6 mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <Coins size={18} className="text-yellow-400" />
-              <span className="font-bold">Treasury Overview</span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {[
-                { label: "Total Treasury", value: `$${(TREASURY.total / 1000000).toFixed(2)}M`, color: "text-yellow-400" },
-                { label: "Allocated", value: `$${(TREASURY.allocated / 1000).toFixed(0)}K`, color: "text-orange-400" },
-                { label: "Available", value: `$${((TREASURY.total - TREASURY.allocated) / 1000000).toFixed(2)}M`, color: "text-green-400" },
-                { label: "Total Earned", value: `$${(TREASURY.earned / 1000000).toFixed(1)}M`, color: "text-cyan-400" },
-              ].map((t, i) => (
-                <div key={i} className="text-center p-3 rounded-xl bg-white/5">
-                  <div className="text-xs text-white/40 mb-1">{t.label}</div>
-                  <div className={`text-xl font-black ${t.color}`}>{t.value}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Filter Tabs */}
-          <div className="flex gap-2 mb-5">
-            {(["all", "active", "passed", "failed", "pending"] as const).map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-4 py-2 rounded-xl text-sm font-medium capitalize transition ${
-                  filter === f
-                    ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                    : "border border-white/10 text-white/40 hover:text-white"
-                }`}
-              >
-                {f}
-              </button>
+          {/* Filter */}
+          <div style={{display:"flex",gap:7,marginBottom:16}}>
+            {(["all","active","passed","failed"] as const).map(f=>(
+              <button key={f} onClick={()=>setFilter(f)} style={{padding:"7px 14px",borderRadius:9,border:`1px solid ${filter===f?"rgba(26,107,255,0.4)":"rgba(26,107,255,0.12)"}`,background:filter===f?"rgba(26,107,255,0.12)":"transparent",color:filter===f?"#4da6ff":"rgba(255,255,255,0.4)",fontSize:"0.78rem",fontWeight:600,cursor:"pointer",textTransform:"capitalize"}}>{f}</button>
             ))}
           </div>
 
           {/* Proposals */}
-          <div className="space-y-4">
-            {filtered.map((p) => {
-              const total = p.votesFor + p.votesAgainst + p.abstain;
-              const forPct = total ? Math.round((p.votesFor / total) * 100) : 0;
-              const againstPct = total ? Math.round((p.votesAgainst / total) * 100) : 0;
-              const meta = STATUS_META[p.status];
-              const StatusIcon = meta.icon;
-              const isActive = p.status === "active";
-
-              return (
-                <div key={p.id} className="glass-card rounded-2xl p-6">
-                  {/* Proposal Header */}
-                  <div className="flex items-start justify-between gap-4 mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs text-white/30 font-mono">{p.id}</span>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-white/40">{p.category}</span>
-                        <span className={`text-xs px-3 py-1 rounded-full border flex items-center gap-1 font-medium ${meta.bg} ${meta.color}`}>
-                          <StatusIcon size={10} />
-                          {meta.label}
-                        </span>
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            {filtered.map(p=>{
+              const total = p.for+p.against+p.abstain;
+              const forPct = total?Math.round((p.for/total)*100):0;
+              const agtPct = total?Math.round((p.against/total)*100):0;
+              const meta   = STATUS_META[p.status];
+              return(
+                <div key={p.id} style={{background:"rgba(4,15,36,0.9)",border:"1px solid rgba(26,107,255,0.14)",borderRadius:18,padding:22}}>
+                  <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:12,marginBottom:12}}>
+                    <div style={{flex:1}}>
+                      <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:6,flexWrap:"wrap"}}>
+                        <span style={{fontSize:"0.62rem",fontFamily:"monospace",color:"rgba(255,255,255,0.3)"}}>{p.id}</span>
+                        <span style={{fontSize:"0.62rem",padding:"2px 7px",background:"rgba(26,107,255,0.08)",border:"1px solid rgba(26,107,255,0.15)",borderRadius:5,color:"#4da6ff"}}>{p.category}</span>
+                        <span style={{fontSize:"0.65rem",padding:"3px 9px",borderRadius:7,fontWeight:700,background:meta.bg,color:meta.color,border:`1px solid ${meta.color}33`}}>{meta.label}</span>
                       </div>
-                      <h3 className="font-bold text-lg leading-snug mb-1">{p.title}</h3>
-                      <p className="text-sm text-white/50 mb-2">{p.description}</p>
-                      <div className="flex items-center gap-3 text-xs text-white/30">
-                        <span>Proposed by {p.proposer}</span>
-                        {isActive && <span className="flex items-center gap-1"><Clock size={10} /> Ends {p.deadline}</span>}
-                        <span className="text-yellow-400/70">⚡ {p.impact}</span>
-                      </div>
+                      <div style={{fontWeight:800,fontSize:"1rem",lineHeight:1.35,marginBottom:5}}>{p.title}</div>
+                      <div style={{fontSize:"0.72rem",color:"rgba(255,255,255,0.38)"}}>Proposed by {p.proposer}{p.status==="active"?` · Ends ${p.deadline}`:""}</div>
+                      <div style={{fontSize:"0.7rem",color:"#f0c040",marginTop:3}}>⚡ {p.impact}</div>
                     </div>
                   </div>
 
-                  {/* Vote Bar */}
-                  {total > 0 && (
-                    <div className="mb-4">
-                      <div className="flex justify-between text-xs mb-1.5">
-                        <span className="text-green-400 font-medium">For: {forPct}% ({p.votesFor.toLocaleString()} VP)</span>
-                        <span className="text-white/40">Quorum: {p.quorum}% required</span>
-                        <span className="text-red-400 font-medium">Against: {againstPct}% ({p.votesAgainst.toLocaleString()} VP)</span>
+                  {total>0&&(
+                    <div style={{marginBottom:14}}>
+                      <div style={{display:"flex",justifyContent:"space-between",fontSize:"0.72rem",marginBottom:4}}>
+                        <span style={{color:"#00e676",fontWeight:600}}>For: {forPct}% ({p.for.toLocaleString()} VP)</span>
+                        <span style={{color:"rgba(255,255,255,0.35)"}}>Quorum: {p.quorum}%</span>
+                        <span style={{color:"#ff5555",fontWeight:600}}>Against: {agtPct}% ({p.against.toLocaleString()} VP)</span>
                       </div>
-                      <div className="h-3 rounded-full bg-white/10 overflow-hidden flex">
-                        <div className="h-full bg-green-500 transition-all" style={{ width: `${forPct}%` }} />
-                        <div className="h-full bg-white/20 transition-all" style={{ width: `${total ? Math.round((p.abstain / total) * 100) : 0}%` }} />
-                        <div className="h-full bg-red-500 transition-all" style={{ width: `${againstPct}%` }} />
+                      <div style={{height:10,borderRadius:5,background:"rgba(26,107,255,0.08)",overflow:"hidden",display:"flex"}}>
+                        <div style={{width:`${forPct}%`,background:"#00e676",transition:"width 0.6s"}}/>
+                        <div style={{width:`${total?Math.round((p.abstain/total)*100):0}%`,background:"rgba(255,255,255,0.15)"}}/>
+                        <div style={{width:`${agtPct}%`,background:"#ff5555",transition:"width 0.6s"}}/>
                       </div>
-                      <div className="text-xs text-white/30 mt-1">{total.toLocaleString()} total votes cast</div>
+                      <div style={{fontSize:"0.65rem",color:"rgba(255,255,255,0.3)",marginTop:4}}>{total.toLocaleString()} total votes</div>
                     </div>
                   )}
 
-                  {/* Voting Buttons */}
-                  {isActive && !p.myVote && (
-                    <div className="flex gap-3">
-                      {(["for", "against", "abstain"] as const).map((choice) => (
-                        <button
-                          key={choice}
-                          onClick={() => vote(p.id, choice)}
-                          disabled={!!voting}
-                          className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition capitalize disabled:opacity-50 ${
-                            choice === "for"
-                              ? "bg-green-500/20 border border-green-500/30 text-green-400 hover:bg-green-500/30"
-                              : choice === "against"
-                              ? "bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30"
-                              : "bg-white/5 border border-white/10 text-white/40 hover:bg-white/10"
-                          }`}
-                        >
-                          {voting === p.id + choice ? (
-                            <Loader2 size={14} className="animate-spin mx-auto" />
-                          ) : (
-                            `Vote ${choice === "for" ? "✓" : choice === "against" ? "✗" : "~"} ${choice}`
-                          )}
+                  {p.status==="active"&&!p.myVote&&(
+                    <div style={{display:"flex",gap:9}}>
+                      {(["for","against","abstain"] as const).map(choice=>(
+                        <button key={choice} onClick={()=>vote(p.id,choice)} disabled={!!voting} style={{
+                          flex:1,padding:"10px",borderRadius:10,fontWeight:700,fontSize:"0.8rem",cursor:"pointer",textTransform:"capitalize",transition:"all 0.15s",
+                          background:choice==="for"?"rgba(0,200,83,0.1)":choice==="against"?"rgba(255,85,85,0.1)":"rgba(255,255,255,0.04)",
+                          border:`1px solid ${choice==="for"?"rgba(0,200,83,0.3)":choice==="against"?"rgba(255,85,85,0.3)":"rgba(255,255,255,0.1)"}`,
+                          color:choice==="for"?"#00e676":choice==="against"?"#ff5555":"rgba(255,255,255,0.4)",
+                          opacity:voting?0.5:1,
+                        }}>
+                          {voting===p.id+choice?<Loader2 size={14} style={{animation:"spin 1s linear infinite",display:"inline"}}/>:choice==="for"?"✓ For":choice==="against"?"✗ Against":"~ Abstain"}
                         </button>
                       ))}
                     </div>
                   )}
-
-                  {/* Already voted */}
-                  {p.myVote && (
-                    <div className={`flex items-center gap-2 text-sm font-medium ${
-                      p.myVote === "for" ? "text-green-400" : p.myVote === "against" ? "text-red-400" : "text-white/40"
-                    }`}>
-                      <CheckCircle2 size={16} />
-                      You voted {p.myVote} with {myVotingPower} voting power
+                  {p.myVote&&(
+                    <div style={{display:"flex",alignItems:"center",gap:7,fontSize:"0.82rem",fontWeight:700,color:p.myVote==="for"?"#00e676":p.myVote==="against"?"#ff5555":"rgba(255,255,255,0.4)"}}>
+                      <CheckCircle2 size={16}/>Voted {p.myVote} with {myPower} VP
                     </div>
                   )}
                 </div>
@@ -352,70 +149,35 @@ export default function DAOPage() {
             })}
           </div>
 
-          {/* Create Proposal Modal */}
-          {showCreate && (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="glass-card rounded-3xl p-6 w-full max-w-lg">
-                <div className="flex items-center justify-between mb-5">
-                  <h3 className="font-bold text-lg">Submit a Proposal</h3>
-                  <button onClick={() => setShowCreate(false)} className="text-white/50 hover:text-white">
-                    <X size={20} />
-                  </button>
+          {showCreate&&(
+            <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:50,padding:16}}>
+              <div style={{background:"rgba(4,15,36,0.99)",border:"1px solid rgba(26,107,255,0.25)",borderRadius:22,padding:28,width:"100%",maxWidth:500,color:"white"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
+                  <div style={{fontWeight:900,fontSize:"1.1rem"}}>Submit a Proposal</div>
+                  <button onClick={()=>setShowCreate(false)} style={{background:"none",border:"none",color:"rgba(255,255,255,0.4)",cursor:"pointer"}}><X size={20}/></button>
                 </div>
-
-                <div className="p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-start gap-2 mb-5 text-sm">
-                  <AlertCircle size={16} className="text-yellow-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-yellow-300">Requires TruScore 75+ and 30 days on platform to submit. Proposals need 5% quorum to proceed to vote.</span>
+                <div style={{padding:11,background:"rgba(240,192,64,0.07)",border:"1px solid rgba(240,192,64,0.18)",borderRadius:10,display:"flex",gap:8,marginBottom:16,fontSize:"0.78rem",color:"rgba(255,255,255,0.55)"}}>
+                  <AlertCircle size={14} color="#f0c040" style={{flexShrink:0,marginTop:1}}/> Requires Trust Score 750+ and 30 days on platform. Proposals need 5% quorum to proceed to vote.
                 </div>
-
-                <div className="space-y-4 mb-5">
+                <div style={{display:"flex",flexDirection:"column",gap:11,marginBottom:18}}>
                   <div>
-                    <label className="text-xs text-white/50 mb-2 block uppercase tracking-wide">Category</label>
-                    <select
-                      value={newCategory}
-                      onChange={(e) => setNewCategory(e.target.value)}
-                      className="veritas-input"
-                    >
-                      {["Governance", "Economics", "Security", "Feature", "Treasury", "Community"].map((c) => (
-                        <option key={c}>{c}</option>
-                      ))}
+                    <label style={{fontSize:"0.68rem",fontWeight:700,color:"rgba(255,255,255,0.4)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5,display:"block"}}>Category</label>
+                    <select value={newCat} onChange={e=>setNewCat(e.target.value)} style={{width:"100%",padding:"11px 14px",background:"rgba(6,18,41,0.8)",border:"1px solid rgba(26,107,255,0.18)",borderRadius:9,color:"white",fontSize:"0.88rem",outline:"none"}}>
+                      {["Governance","Economics","Security","Feature","Treasury","Community"].map(c=><option key={c}>{c}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs text-white/50 mb-2 block uppercase tracking-wide">Proposal Title</label>
-                    <input
-                      value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
-                      placeholder="Clear, specific title describing the change"
-                      className="veritas-input"
-                    />
+                    <label style={{fontSize:"0.68rem",fontWeight:700,color:"rgba(255,255,255,0.4)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5,display:"block"}}>Proposal Title</label>
+                    <input value={newTitle} onChange={e=>setNewTitle(e.target.value)} placeholder="Clear, specific title describing the change..." style={{width:"100%",padding:"11px 14px",background:"rgba(6,18,41,0.8)",border:"1px solid rgba(26,107,255,0.18)",borderRadius:9,color:"white",fontSize:"0.88rem",outline:"none"}}/>
                   </div>
                   <div>
-                    <label className="text-xs text-white/50 mb-2 block uppercase tracking-wide">Full Description</label>
-                    <textarea
-                      value={newDesc}
-                      onChange={(e) => setNewDesc(e.target.value)}
-                      placeholder="Describe the proposal in detail: what it changes, why it's needed, and expected impact..."
-                      rows={5}
-                      className="veritas-input resize-none"
-                    />
+                    <label style={{fontSize:"0.68rem",fontWeight:700,color:"rgba(255,255,255,0.4)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:5,display:"block"}}>Description & Impact</label>
+                    <textarea value={newDesc} onChange={e=>setNewDesc(e.target.value)} rows={4} placeholder="What it changes, why it's needed, and expected impact..." style={{width:"100%",padding:"11px 14px",background:"rgba(6,18,41,0.8)",border:"1px solid rgba(26,107,255,0.18)",borderRadius:9,color:"white",fontSize:"0.85rem",outline:"none",resize:"none",lineHeight:1.55}}/>
                   </div>
                 </div>
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setShowCreate(false)}
-                    className="flex-1 py-3 rounded-xl border border-white/10 text-white/60 text-sm hover:text-white transition"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={submitProposal}
-                    disabled={!newTitle || !newDesc}
-                    className="flex-1 py-3 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-black font-bold text-sm disabled:opacity-40 transition"
-                  >
-                    Submit for Review
-                  </button>
+                <div style={{display:"flex",gap:10}}>
+                  <button onClick={()=>setShowCreate(false)} style={{flex:1,padding:"12px",borderRadius:10,border:"1px solid rgba(26,107,255,0.15)",background:"transparent",color:"rgba(255,255,255,0.5)",cursor:"pointer"}}>Cancel</button>
+                  <button onClick={()=>setShowCreate(false)} disabled={!newTitle||!newDesc} style={{flex:2,padding:"12px",background:"linear-gradient(135deg,#1a6bff,#0050dd)",border:"none",borderRadius:10,color:"white",fontWeight:700,cursor:"pointer",opacity:!newTitle||!newDesc?0.4:1}}>Submit for Review</button>
                 </div>
               </div>
             </div>

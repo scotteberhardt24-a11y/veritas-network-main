@@ -1,133 +1,128 @@
 
 "use client";
-
 import { useState } from "react";
 import Sidebar from "@/components/sidebar/Sidebar";
 import TopBar from "@/components/topbar/TopBar";
-import { BarChart3, TrendingUp, DollarSign, Briefcase, Star, Calendar, Download } from "lucide-react";
-
-const PERIODS = ["7 days","30 days","90 days","1 year","All time"];
+import { VeritasEmblem } from "@/components/badges/VeritasBadges";
+import { BarChart3, TrendingUp, DollarSign, Briefcase, Star, Calendar, Download, Zap, Users } from "lucide-react";
 
 const MONTHLY = [
-  { month:"Jan", earnings:18400, jobs:12, score:89 },
-  { month:"Feb", earnings:22100, jobs:15, score:90 },
-  { month:"Mar", earnings:31200, jobs:18, score:91 },
-  { month:"Apr", earnings:28900, jobs:14, score:92 },
-  { month:"May", earnings:38700, jobs:21, score:93 },
-  { month:"Jun", earnings:43200, jobs:24, score:94 },
+  {m:"Jan",earn:18400,jobs:12,score:89,proposals:34,acceptance:35},
+  {m:"Feb",earn:22100,jobs:15,score:90,proposals:41,acceptance:37},
+  {m:"Mar",earn:31200,jobs:18,score:91,proposals:52,acceptance:35},
+  {m:"Apr",earn:28900,jobs:14,score:92,proposals:48,acceptance:29},
+  {m:"May",earn:38700,jobs:21,score:93,proposals:61,acceptance:34},
+  {m:"Jun",earn:43200,jobs:24,score:94,proposals:67,acceptance:36},
 ];
 
-function BarGroup({ data, max, color }: { data: number[]; max: number; color: string }) {
-  return (
-    <div className="flex items-end gap-1 h-32">
-      {data.map((v,i) => (
-        <div key={i} className={"rounded-t-md flex-1 transition-all "+color} style={{ height: `${(v/max)*100}%`, minHeight:4 }} />
-      ))}
-    </div>
-  );
-}
+const CATS = [
+  {cat:"Development",pct:62,amount:113244,jobs:58},
+  {cat:"Design",     pct:21,amount:38325, jobs:24},
+  {cat:"Consulting", pct:11,amount:20081, jobs:9 },
+  {cat:"Writing",    pct:6, amount:10950, jobs:7 },
+];
 
-export default function AnalyticsPage() {
-  const [period, setPeriod] = useState("30 days");
+export default function AnalyticsV2Page() {
+  const [period, setPeriod] = useState("6mo");
+  const [metric, setMetric] = useState("earnings");
+  const maxEarn = Math.max(...MONTHLY.map(m=>m.earn));
 
-  const totalEarnings = MONTHLY.reduce((a,m)=>a+m.earnings,0);
-  const totalJobs     = MONTHLY.reduce((a,m)=>a+m.jobs,0);
-  const avgScore      = Math.round(MONTHLY.reduce((a,m)=>a+m.score,0)/MONTHLY.length);
-  const maxEarnings   = Math.max(...MONTHLY.map(m=>m.earnings));
+  const total = MONTHLY.reduce((a,m)=>a+m.earn,0);
+  const avgAcceptance = Math.round(MONTHLY.reduce((a,m)=>a+m.acceptance,0)/MONTHLY.length);
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <TopBar />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+    <div style={{display:"flex",minHeight:"100vh",background:"#010812"}}>
+      <Sidebar/>
+      <div style={{flex:1,display:"flex",flexDirection:"column"}}>
+        <TopBar/>
+        <main style={{flex:1,overflowY:"auto",padding:24,color:"white"}}>
 
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <BarChart3 className="text-yellow-400" size={28}/>
-              <h1 className="text-3xl font-black gold-text">Analytics</h1>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24,flexWrap:"wrap",gap:12}}>
+            <div style={{display:"flex",alignItems:"center",gap:12}}>
+              <BarChart3 size={28} color="#1a6bff"/>
+              <h1 style={{fontSize:"1.8rem",fontWeight:900,margin:0}}>Analytics</h1>
             </div>
-            <div className="flex gap-2">
-              {PERIODS.map(p => (
-                <button key={p} onClick={()=>setPeriod(p)} className={"px-3 py-1.5 rounded-xl text-xs font-medium transition "+(period===p ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30" : "border border-white/10 text-white/40 hover:text-white")}>{p}</button>
+            <div style={{display:"flex",gap:8}}>
+              {["3mo","6mo","1yr","All"].map(p=>(
+                <button key={p} onClick={()=>setPeriod(p)} style={{padding:"7px 13px",borderRadius:8,border:`1px solid ${period===p?"rgba(26,107,255,0.4)":"rgba(26,107,255,0.12)"}`,background:period===p?"rgba(26,107,255,0.12)":"transparent",color:period===p?"#4da6ff":"rgba(255,255,255,0.4)",fontSize:"0.78rem",fontWeight:600,cursor:"pointer"}}>{p}</button>
               ))}
+              <button style={{padding:"7px 13px",borderRadius:8,border:"1px solid rgba(26,107,255,0.15)",background:"rgba(26,107,255,0.06)",color:"#4da6ff",fontSize:"0.78rem",fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:5}}><Download size={13}/>Export</button>
             </div>
           </div>
 
-          {/* KPI Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {/* KPIs */}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:20}}>
             {[
-              { icon:DollarSign, label:"Total Earnings",   value:`$${totalEarnings.toLocaleString()}`, sub:"+18% vs last period", color:"text-green-400"  },
-              { icon:Briefcase,  label:"Jobs Completed",   value:totalJobs,    sub:"+4 vs last period",    color:"text-yellow-400" },
-              { icon:Star,       label:"Avg TruScore",     value:avgScore,     sub:"+5 points",            color:"text-cyan-400"   },
-              { icon:TrendingUp, label:"Repeat Hire Rate", value:"71%",        sub:"+8% vs last period",   color:"text-purple-400" },
-            ].map((s,i) => {
-              const Icon = s.icon;
-              return (
-                <div key={i} className="glass-card rounded-2xl p-5">
-                  <Icon size={18} className={s.color}/>
-                  <div className="text-2xl font-black mt-3 mb-0.5">{s.value}</div>
-                  <div className="text-xs text-white/50 mb-1">{s.label}</div>
-                  <div className="text-xs text-green-400">{s.sub}</div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Earnings Chart */}
-          <div className="glass-card rounded-3xl p-6 mb-5">
-            <div className="flex items-center justify-between mb-5">
-              <span className="font-bold">Monthly Earnings</span>
-              <button className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white transition">
-                <Download size={14}/> Export
-              </button>
-            </div>
-            <div className="flex items-end gap-4">
-              <div className="flex-1">
-                <BarGroup data={MONTHLY.map(m=>m.earnings)} max={maxEarnings} color="bg-yellow-500/70 hover:bg-yellow-500" />
-                <div className="flex gap-1 mt-2">
-                  {MONTHLY.map(m => <div key={m.month} className="flex-1 text-center text-xs text-white/30">{m.month}</div>)}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Monthly Breakdown Table */}
-          <div className="glass-card rounded-2xl overflow-hidden mb-5">
-            <div className="grid grid-cols-4 px-5 py-3 text-xs text-white/40 uppercase tracking-wide border-b border-white/10">
-              <div>Month</div><div>Earnings</div><div>Jobs</div><div>TruScore</div>
-            </div>
-            {[...MONTHLY].reverse().map((m,i) => (
-              <div key={i} className="grid grid-cols-4 px-5 py-3.5 border-b border-white/5 last:border-0 hover:bg-white/3 transition">
-                <div className="flex items-center gap-2"><Calendar size={14} className="text-white/30"/><span className="text-sm">{m.month} 2026</span></div>
-                <div className="text-sm font-bold text-green-400">${m.earnings.toLocaleString()}</div>
-                <div className="text-sm">{m.jobs} jobs</div>
-                <div className="text-sm font-bold gold-text">{m.score}</div>
+              {icon:<DollarSign size={20}/>,label:"Total Earnings",   value:`$${total.toLocaleString()}`,      sub:"+18% vs prior period",color:"#00e676"},
+              {icon:<Briefcase size={20}/>, label:"Jobs Completed",   value:MONTHLY.reduce((a,m)=>a+m.jobs,0),sub:"+4 per month avg",   color:"#f0c040"},
+              {icon:<Star size={20}/>,      label:"Avg Trust Score",  value:MONTHLY[MONTHLY.length-1].score,  sub:"+5 points this period",color:"#4da6ff"},
+              {icon:<Zap size={20}/>,       label:"Proposal Accept%", value:avgAcceptance+"%",                sub:"Industry avg: 22%",   color:"#00d4ff"},
+            ].map((s,i)=>(
+              <div key={i} style={{background:"rgba(4,15,36,0.9)",border:"1px solid rgba(26,107,255,0.14)",borderRadius:14,padding:"18px 16px"}}>
+                <div style={{color:s.color,marginBottom:8}}>{s.icon}</div>
+                <div style={{fontSize:"1.7rem",fontWeight:900,color:s.color,lineHeight:1,marginBottom:3}}>{s.value}</div>
+                <div style={{fontSize:"0.7rem",color:"rgba(255,255,255,0.4)"}}>{s.label}</div>
+                <div style={{fontSize:"0.62rem",color:"#00e676",marginTop:3,fontWeight:600}}>{s.sub}</div>
               </div>
             ))}
           </div>
 
-          {/* Top Categories */}
-          <div className="glass-card rounded-2xl p-5">
-            <h3 className="font-bold mb-4">Earnings by Category</h3>
-            <div className="space-y-3">
-              {[
-                { cat:"Development",  pct:62, amount:113244 },
-                { cat:"Design",       pct:21, amount:38325  },
-                { cat:"Consulting",   pct:11, amount:20081  },
-                { cat:"Writing",      pct:6,  amount:10950  },
-              ].map((c,i) => (
-                <div key={i}>
-                  <div className="flex justify-between text-sm mb-1.5">
-                    <span className="text-white/70">{c.cat}</span>
-                    <span className="font-bold">${c.amount.toLocaleString()} <span className="text-white/40">({c.pct}%)</span></span>
-                  </div>
-                  <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                    <div className="h-full rounded-full bg-gradient-to-r from-yellow-500 to-yellow-300" style={{width:`${c.pct}%`}}/>
-                  </div>
-                </div>
-              ))}
+          {/* Chart */}
+          <div style={{background:"rgba(4,15,36,0.9)",border:"1px solid rgba(26,107,255,0.14)",borderRadius:16,padding:22,marginBottom:16}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+              <div style={{fontWeight:800}}>Monthly Overview</div>
+              <div style={{display:"flex",gap:6}}>
+                {[["earnings","Earnings"],["jobs","Jobs"],["acceptance","Accept%"]].map(([k,l])=>(
+                  <button key={k} onClick={()=>setMetric(k)} style={{padding:"5px 11px",borderRadius:7,border:`1px solid ${metric===k?"rgba(26,107,255,0.4)":"rgba(26,107,255,0.1)"}`,background:metric===k?"rgba(26,107,255,0.12)":"transparent",color:metric===k?"#4da6ff":"rgba(255,255,255,0.4)",fontSize:"0.72rem",fontWeight:600,cursor:"pointer"}}>{l}</button>
+                ))}
+              </div>
             </div>
+            <div style={{display:"flex",alignItems:"flex-end",gap:10,height:140,paddingBottom:4}}>
+              {MONTHLY.map((m,i)=>{
+                const val   = metric==="earnings"?m.earn:metric==="jobs"?m.jobs*10:m.acceptance*3;
+                const maxV  = metric==="earnings"?maxEarn:metric==="jobs"?240:108;
+                const label = metric==="earnings"?`$${(m.earn/1000).toFixed(0)}K`:metric==="jobs"?m.jobs:m.acceptance+"%";
+                return(
+                  <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}>
+                    <div style={{fontSize:"0.65rem",fontWeight:700,color:"#00e676"}}>{label}</div>
+                    <div style={{width:"100%",background:"linear-gradient(180deg,#1a6bff,rgba(26,107,255,0.4))",borderRadius:"5px 5px 0 0",transition:"height 0.6s",height:`${Math.round((val/maxV)*110)}px`,minHeight:6}}/>
+                    <div style={{fontSize:"0.65rem",color:"rgba(255,255,255,0.4)"}}>{m.m}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Monthly table */}
+          <div style={{background:"rgba(4,15,36,0.9)",border:"1px solid rgba(26,107,255,0.14)",borderRadius:16,overflow:"hidden",marginBottom:16}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1.5fr 1fr 1fr 1fr",padding:"10px 18px",fontSize:"0.62rem",fontWeight:700,color:"rgba(255,255,255,0.35)",textTransform:"uppercase",letterSpacing:"0.08em",borderBottom:"1px solid rgba(26,107,255,0.1)"}}>
+              <div>Month</div><div>Earnings</div><div>Jobs</div><div>Trust Score</div><div>Accept%</div>
+            </div>
+            {[...MONTHLY].reverse().map((m,i)=>(
+              <div key={i} style={{display:"grid",gridTemplateColumns:"1fr 1.5fr 1fr 1fr 1fr",padding:"12px 18px",borderBottom:"1px solid rgba(26,107,255,0.05)",alignItems:"center"}}>
+                <div style={{display:"flex",alignItems:"center",gap:6,fontSize:"0.85rem"}}><Calendar size={13} color="rgba(255,255,255,0.3)"/> {m.m} 2026</div>
+                <div style={{fontWeight:800,color:"#00e676"}}>${m.earn.toLocaleString()}</div>
+                <div style={{fontSize:"0.85rem"}}>{m.jobs}</div>
+                <div style={{fontWeight:800,color:"#4da6ff"}}>{m.score}</div>
+                <div style={{fontSize:"0.85rem",color:"#00d4ff"}}>{m.acceptance}%</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Category breakdown */}
+          <div style={{background:"rgba(4,15,36,0.9)",border:"1px solid rgba(26,107,255,0.14)",borderRadius:16,padding:22}}>
+            <div style={{fontWeight:800,marginBottom:16}}>Earnings by Category</div>
+            {CATS.map((c,i)=>(
+              <div key={i} style={{marginBottom:14}}>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:"0.82rem",marginBottom:5}}>
+                  <span style={{color:"rgba(255,255,255,0.7)",fontWeight:600}}>{c.cat}</span>
+                  <span style={{fontWeight:800}}>${c.amount.toLocaleString()} <span style={{color:"rgba(255,255,255,0.35)",fontWeight:400}}>({c.pct}% · {c.jobs} jobs)</span></span>
+                </div>
+                <div style={{height:7,background:"rgba(26,107,255,0.08)",borderRadius:4,overflow:"hidden"}}>
+                  <div style={{width:`${c.pct}%`,height:"100%",background:"linear-gradient(90deg,#1a6bff,#00d4ff)",borderRadius:4,transition:"width 0.8s"}}/>
+                </div>
+              </div>
+            ))}
           </div>
         </main>
       </div>

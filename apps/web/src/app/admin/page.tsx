@@ -1,132 +1,121 @@
 
 "use client";
-
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/sidebar/Sidebar";
 import TopBar from "@/components/topbar/TopBar";
-import {
-  Shield, Users, Briefcase, DollarSign, AlertTriangle,
-  TrendingUp, Ban, CheckCircle2, Search, RefreshCw,
-  BarChart3, Activity, Loader2, Eye,
-} from "lucide-react";
+import { VeritasEmblem } from "@/components/badges/VeritasBadges";
+import { Shield, Users, Briefcase, DollarSign, AlertTriangle, TrendingUp, Activity, CheckCircle2, Ban, Search, Eye, Loader2, Zap } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://veritas-trust-ledger-production.up.railway.app";
 
-const MOCK_USERS = [
-  { id:"U001", name:"Alex Chen",    email:"alex@dev.io",  role:"worker", score:99, status:"active",   joined:"Jan 2025", earnings:184500, jobs:247 },
-  { id:"U002", name:"Maya Rodriguez",email:"maya@d.co",  role:"worker", score:98, status:"active",   joined:"Feb 2025", earnings:142000, jobs:189 },
-  { id:"U003", name:"Brian Walsh",  email:"brian@tv.com", role:"client", score:91, status:"active",   joined:"Nov 2024", earnings:0,      jobs:34  },
-  { id:"U004", name:"Bad Actor",    email:"scam@bad.io",  role:"worker", score:12, status:"flagged",  joined:"Jun 2026", earnings:0,      jobs:0   },
-  { id:"U005", name:"James Park",   email:"jp@write.co",  role:"worker", score:97, status:"active",   joined:"Mar 2025", earnings:98700,  jobs:312 },
-  { id:"U006", name:"New User",     email:"new@user.io",  role:"worker", score:50, status:"pending",  joined:"Jun 2026", earnings:0,      jobs:0   },
+const USERS = [
+  {id:"U001",name:"Alex Chen",    email:"alex@dev.io",  role:"worker",score:99,status:"active",  joined:"Jan 2025",earnings:184500,jobs:247,flag:false},
+  {id:"U002",name:"Maya Rodriguez",email:"maya@d.co",   role:"worker",score:98,status:"active",  joined:"Feb 2025",earnings:142000,jobs:189,flag:false},
+  {id:"U003",name:"Brian Walsh",  email:"brian@tv.com", role:"client",score:91,status:"active",  joined:"Nov 2024",earnings:0,     jobs:34, flag:false},
+  {id:"U004",name:"Suspicious",   email:"scam@bad.io",  role:"worker",score:12,status:"flagged", joined:"Jun 2026",earnings:0,     jobs:0,  flag:true},
+  {id:"U005",name:"James Park",   email:"jp@write.co",  role:"worker",score:97,status:"active",  joined:"Mar 2025",earnings:98700, jobs:312,flag:false},
+  {id:"U006",name:"New User",     email:"new@user.io",  role:"worker",score:50,status:"pending", joined:"Jun 2026",earnings:0,     jobs:0,  flag:false},
 ];
 
-const MOCK_DISPUTES = [
-  { id:"DSP-1021", parties:"CloudSync AI vs Zoe L.", amount:2000, status:"open",     opened:"Jun 28" },
-  { id:"DSP-1019", parties:"RetailBoost vs Tom E.",  amount:800,  status:"resolved", opened:"Jun 20" },
-  { id:"DSP-1015", parties:"FinEdge vs Rina P.",     amount:1500, status:"open",     opened:"Jun 15" },
+const METRICS = [
+  {label:"Platform Revenue MTD",value:"$48,200",  change:"+18%"},
+  {label:"Avg Trust Score",     value:"78.4",     change:"+1.2"},
+  {label:"Dispute Rate",        value:"0.8%",     change:"-0.1%"},
+  {label:"Worker Retention",    value:"84.7%",    change:"+3.2%"},
+  {label:"Avg Job Value",       value:"$3,240",   change:"+$180"},
+  {label:"AI Match Rate",       value:"67.3%",    change:"+4.1%"},
+  {label:"Escrow Release Rate", value:"98.1%",    change:"+0.3%"},
+  {label:"New Registrations",   value:"1,247",    change:"+31%"},
 ];
 
-export default function AdminPage() {
-  const [tab, setTab]         = useState("Overview");
-  const [users, setUsers]     = useState(MOCK_USERS);
-  const [search, setSearch]   = useState("");
+export default function AdminV2Page() {
+  const [tab, setTab]       = useState("overview");
+  const [users, setUsers]   = useState(USERS);
+  const [search, setSearch] = useState("");
   const [banning, setBanning] = useState<string|null>(null);
-  const [loading, setLoading] = useState(false);
 
-  const TABS = ["Overview","Users","Disputes","Platform"];
-
-  useEffect(() => {
-    const token = localStorage.getItem("veritas_token");
-    if (!token) return;
-    fetch(`${API}/api/admin/stats`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).catch(() => {});
-  }, []);
-
-  function banUser(id: string) {
+  function ban(id:string) {
     setBanning(id);
-    setTimeout(() => {
-      setUsers(prev => prev.map(u => u.id === id ? { ...u, status:"banned" } : u));
-      setBanning(null);
-    }, 1000);
+    setTimeout(()=>{ setUsers(p=>p.map(u=>u.id===id?{...u,status:"banned"}:u)); setBanning(null); },1000);
   }
 
-  const filtered = users.filter(u =>
-    !search || u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = users.filter(u=>!search||u.name.toLowerCase().includes(search.toLowerCase())||u.email.toLowerCase().includes(search.toLowerCase()));
+  const TABS = ["overview","users","disputes","platform"];
 
-  const stats = [
-    { icon:Users,      label:"Total Users",    value:"12,847",  sub:"+124 today",  color:"text-cyan-400"   },
-    { icon:Briefcase,  label:"Active Jobs",    value:"2,341",   sub:"+89 today",   color:"text-yellow-400" },
-    { icon:DollarSign, label:"Escrow Held",    value:"$1.2M",   sub:"Across 891",  color:"text-green-400"  },
-    { icon:AlertTriangle,label:"Open Disputes",value:"14",      sub:"2 urgent",    color:"text-red-400"    },
-  ];
-
-  const platformMetrics = [
-    { label:"Platform Revenue (MTD)",    value:"$48,200",   change:"+18%"  },
-    { label:"Avg TruScore",              value:"78.4",      change:"+1.2"  },
-    { label:"Dispute Resolution Rate",   value:"99.2%",     change:"+0.1%" },
-    { label:"Worker Retention (90d)",    value:"84.7%",     change:"+3.2%" },
-    { label:"Avg Job Value",             value:"$3,240",    change:"+$180" },
-    { label:"AI Match Acceptance Rate",  value:"67.3%",     change:"+4.1%" },
-    { label:"Escrow Release Rate",       value:"98.1%",     change:"+0.3%" },
-    { label:"New Registrations (MTD)",   value:"1,247",     change:"+31%"  },
+  const EVENTS = [
+    {type:"🟢",msg:"New Elite member: Alex Chen reached Trust Score 990",time:"2m ago"},
+    {type:"💰",msg:"Large escrow activated: $18,000 — Bloom Health",time:"15m ago"},
+    {type:"🚨",msg:"Dispute escalated: DSP-1021 — requires manual review",time:"42m ago"},
+    {type:"👤",msg:"Registration spike: +47 users in the last hour",time:"1h ago"},
+    {type:"🤖",msg:"AI match engine updated — acceptance rate now 94.2%",time:"3h ago"},
+    {type:"⚡",msg:"Platform fee revenue hit monthly record: $48,200",time:"5h ago"},
   ];
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <TopBar />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+    <div style={{display:"flex",minHeight:"100vh",background:"#010812"}}>
+      <Sidebar/>
+      <div style={{flex:1,display:"flex",flexDirection:"column"}}>
+        <TopBar/>
+        <main style={{flex:1,overflowY:"auto",padding:24,color:"white"}}>
 
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <Shield className="text-yellow-400" size={28}/>
-              <h1 className="text-3xl font-black gold-text">Admin Panel</h1>
+          {/* Header */}
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24,flexWrap:"wrap",gap:12}}>
+            <div style={{display:"flex",alignItems:"center",gap:12}}>
+              <VeritasEmblem size={44}/>
+              <div>
+                <h1 style={{fontSize:"1.8rem",fontWeight:900,margin:0}}>Admin Panel</h1>
+                <div style={{fontSize:"0.65rem",color:"rgba(255,255,255,0.35)",marginTop:2}}>Veritas Network Control Center</div>
+              </div>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/20">
-              <div className="w-2 h-2 rounded-full bg-red-400 animate-pulse"/>
-              <span className="text-xs text-red-400 font-medium">Admin Access</span>
+            <div style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",background:"rgba(255,50,50,0.08)",border:"1px solid rgba(255,50,50,0.2)",borderRadius:10}}>
+              <div style={{width:7,height:7,borderRadius:"50%",background:"#ff3333",animation:"pulse 2s infinite"}}/>
+              <span style={{fontSize:"0.75rem",color:"#ff6666",fontWeight:700,letterSpacing:"0.08em"}}>ADMIN ACCESS</span>
             </div>
           </div>
 
-          <div className="flex gap-2 mb-6 border-b border-white/10">
-            {TABS.map(t => (
-              <button key={t} onClick={() => setTab(t)} className={"px-4 py-2.5 text-sm font-medium border-b-2 transition -mb-px "+(tab===t ? "border-yellow-400 text-yellow-400" : "border-transparent text-white/40 hover:text-white")}>{t}</button>
+          {/* Tabs */}
+          <div style={{display:"flex",gap:2,marginBottom:20,borderBottom:"1px solid rgba(26,107,255,0.1)"}}>
+            {TABS.map(t=>(
+              <button key={t} onClick={()=>setTab(t)} style={{padding:"10px 18px",fontSize:"0.85rem",fontWeight:600,border:"none",background:"transparent",cursor:"pointer",color:tab===t?"#4da6ff":"rgba(255,255,255,0.4)",borderBottom:tab===t?"2px solid #1a6bff":"2px solid transparent",marginBottom:-1,textTransform:"capitalize"}}>{t}</button>
             ))}
           </div>
 
           {/* OVERVIEW */}
-          {tab === "Overview" && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.map((s,i) => {
-                  const Icon = s.icon;
-                  return (
-                    <div key={i} className="glass-card rounded-2xl p-5">
-                      <Icon size={20} className={s.color}/>
-                      <div className="text-2xl font-black mt-3 mb-0.5">{s.value}</div>
-                      <div className="text-xs text-white/50">{s.label}</div>
-                      <div className="text-xs text-green-400 mt-1">{s.sub}</div>
+          {tab==="overview"&&(
+            <div style={{display:"flex",flexDirection:"column",gap:16}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
+                {[
+                  {icon:<Users size={20}/>,      label:"Total Users",     value:"12,847",sub:"+124 today",  color:"#4da6ff"},
+                  {icon:<Briefcase size={20}/>,  label:"Active Jobs",     value:"2,341", sub:"+89 today",   color:"#f0c040"},
+                  {icon:<DollarSign size={20}/>, label:"Escrow Held",     value:"$1.2M", sub:"Across 891",  color:"#00e676"},
+                  {icon:<AlertTriangle size={20}/>,label:"Open Disputes", value:"14",    sub:"2 urgent",    color:"#ff5555"},
+                ].map((s,i)=>{
+                  const Icon=s.icon;
+                  return(
+                    <div key={i} style={{background:"rgba(4,15,36,0.9)",border:"1px solid rgba(26,107,255,0.14)",borderRadius:14,padding:"18px 16px"}}>
+                      <div style={{color:s.color,marginBottom:8}}>{s.icon}</div>
+                      <div style={{fontSize:"1.8rem",fontWeight:900,color:s.color,lineHeight:1,marginBottom:3}}>{s.value}</div>
+                      <div style={{fontSize:"0.7rem",color:"rgba(255,255,255,0.4)"}}>{s.label}</div>
+                      <div style={{fontSize:"0.62rem",color:"#00e676",marginTop:3,fontWeight:600}}>{s.sub}</div>
                     </div>
                   );
                 })}
               </div>
-              <div className="glass-card rounded-2xl p-5">
-                <div className="flex items-center gap-2 mb-4"><Activity size={16} className="text-yellow-400"/><span className="font-bold">Recent Platform Events</span></div>
-                <div className="space-y-3">
-                  {[
-                    { type:"🟢", msg:"New Elite member: Alex Chen reached TruScore 99", time:"2m ago" },
-                    { type:"💰", msg:"Large escrow activated: $18,000 — Bloom Health", time:"15m ago" },
-                    { type:"🚨", msg:"Dispute escalated: DSP-1021 — requires manual review", time:"42m ago" },
-                    { type:"👤", msg:"New registration spike: +47 users in last hour", time:"1h ago" },
-                    { type:"🤖", msg:"AI model updated: Match accuracy improved to 94.2%", time:"3h ago" },
-                  ].map((e,i) => (
-                    <div key={i} className="flex items-center gap-3 py-2 border-b border-white/5 last:border-0">
-                      <span>{e.type}</span>
-                      <span className="text-sm text-white/70 flex-1">{e.msg}</span>
-                      <span className="text-xs text-white/30 flex-shrink-0">{e.time}</span>
+
+              <div style={{background:"rgba(4,15,36,0.9)",border:"1px solid rgba(26,107,255,0.14)",borderRadius:16,padding:20}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
+                  <Activity size={16} color="#1a6bff"/>
+                  <span style={{fontWeight:800,fontSize:"0.9rem"}}>Live Platform Events</span>
+                  <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:5,fontSize:"0.65rem",color:"#00e676"}}>
+                    <div style={{width:6,height:6,borderRadius:"50%",background:"#00e676",animation:"pulse 1.5s infinite"}}/>LIVE
+                  </div>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:2}}>
+                  {EVENTS.map((e,i)=>(
+                    <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 12px",borderRadius:9,background:i===0?"rgba(26,107,255,0.06)":"transparent"}}>
+                      <span style={{fontSize:"0.9rem"}}>{e.type}</span>
+                      <span style={{fontSize:"0.82rem",color:"rgba(255,255,255,0.65)",flex:1}}>{e.msg}</span>
+                      <span style={{fontSize:"0.65rem",color:"rgba(255,255,255,0.3)",flexShrink:0,whiteSpace:"nowrap"}}>{e.time}</span>
                     </div>
                   ))}
                 </div>
@@ -135,50 +124,32 @@ export default function AdminPage() {
           )}
 
           {/* USERS */}
-          {tab === "Users" && (
+          {tab==="users"&&(
             <div>
-              <div className="flex gap-3 mb-4">
-                <div className="relative flex-1 max-w-sm">
-                  <Search size={14} className="absolute left-3 top-3.5 text-white/40"/>
-                  <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search users..." className="veritas-input pl-9 py-3 text-sm"/>
-                </div>
+              <div style={{marginBottom:14,maxWidth:360,position:"relative"}}>
+                <Search size={14} style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"rgba(255,255,255,0.3)"}}/>
+                <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search users..." style={{width:"100%",padding:"10px 12px 10px 36px",background:"rgba(6,18,41,0.8)",border:"1px solid rgba(26,107,255,0.18)",borderRadius:9,color:"white",fontSize:"0.85rem",outline:"none"}}/>
               </div>
-              <div className="glass-card rounded-2xl overflow-hidden">
-                <div className="grid grid-cols-12 px-5 py-3 text-xs text-white/40 uppercase tracking-wide border-b border-white/10">
-                  <div className="col-span-3">User</div>
-                  <div className="col-span-2">Role</div>
-                  <div className="col-span-1">Score</div>
-                  <div className="col-span-2 hidden sm:block">Earnings</div>
-                  <div className="col-span-2">Status</div>
-                  <div className="col-span-2">Actions</div>
+              <div style={{background:"rgba(4,15,36,0.9)",border:"1px solid rgba(26,107,255,0.12)",borderRadius:16,overflow:"hidden"}}>
+                <div style={{display:"grid",gridTemplateColumns:"2fr 2fr 1fr 1fr 1.5fr 1fr",padding:"10px 18px",fontSize:"0.62rem",fontWeight:700,color:"rgba(255,255,255,0.35)",textTransform:"uppercase",letterSpacing:"0.08em",borderBottom:"1px solid rgba(26,107,255,0.1)"}}>
+                  <div>User</div><div>Email</div><div>Score</div><div>Role</div><div>Status</div><div>Actions</div>
                 </div>
-                {filtered.map(u => (
-                  <div key={u.id} className="grid grid-cols-12 px-5 py-3.5 border-b border-white/5 last:border-0 items-center hover:bg-white/3 transition">
-                    <div className="col-span-3 flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-xs font-bold flex-shrink-0">{u.name[0]}</div>
-                      <div className="min-w-0">
-                        <div className="text-sm font-medium truncate">{u.name}</div>
-                        <div className="text-xs text-white/30 truncate">{u.email}</div>
-                      </div>
-                    </div>
-                    <div className="col-span-2">
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-white/50 capitalize">{u.role}</span>
-                    </div>
-                    <div className="col-span-1 font-bold gold-text text-sm">{u.score}</div>
-                    <div className="col-span-2 hidden sm:block text-sm text-green-400 font-medium">{u.earnings > 0 ? `$${u.earnings.toLocaleString()}` : "—"}</div>
-                    <div className="col-span-2">
-                      <span className={"text-xs px-2 py-0.5 rounded-full border font-medium "+(
-                        u.status==="active"  ? "bg-green-500/10 text-green-400 border-green-500/20" :
-                        u.status==="flagged" ? "bg-red-500/10 text-red-400 border-red-500/20" :
-                        u.status==="banned"  ? "bg-red-900/20 text-red-600 border-red-900/30" :
-                        "bg-white/5 text-white/40 border-white/10"
-                      )}>{u.status}</span>
-                    </div>
-                    <div className="col-span-2 flex gap-2">
-                      <button className="p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-white transition"><Eye size={14}/></button>
-                      {u.status !== "banned" && u.status !== "active" && (
-                        <button onClick={() => banUser(u.id)} disabled={banning===u.id} className="p-1.5 rounded-lg hover:bg-red-500/20 text-white/40 hover:text-red-400 transition">
-                          {banning===u.id ? <Loader2 size={14} className="animate-spin"/> : <Ban size={14}/>}
+                {filtered.map(u=>(
+                  <div key={u.id} style={{display:"grid",gridTemplateColumns:"2fr 2fr 1fr 1fr 1.5fr 1fr",padding:"12px 18px",borderBottom:"1px solid rgba(26,107,255,0.06)",alignItems:"center"}}>
+                    <div style={{fontWeight:600,fontSize:"0.85rem"}}>{u.name}</div>
+                    <div style={{fontSize:"0.75rem",color:"rgba(255,255,255,0.45)"}}>{u.email}</div>
+                    <div style={{fontWeight:800,color:"#00e676",fontSize:"0.9rem"}}>{u.score}</div>
+                    <div><span style={{fontSize:"0.65rem",padding:"3px 8px",background:"rgba(26,107,255,0.08)",border:"1px solid rgba(26,107,255,0.15)",borderRadius:5,color:"#4da6ff",textTransform:"capitalize"}}>{u.role}</span></div>
+                    <div><span style={{fontSize:"0.65rem",padding:"3px 8px",borderRadius:5,fontWeight:700,
+                      background:u.status==="active"?"rgba(0,200,83,0.1)":u.status==="flagged"?"rgba(255,85,85,0.1)":u.status==="banned"?"rgba(100,0,0,0.2)":"rgba(26,107,255,0.08)",
+                      color:u.status==="active"?"#00e676":u.status==="flagged"?"#ff5555":u.status==="banned"?"#ff3333":"#4da6ff",
+                      border:`1px solid ${u.status==="active"?"rgba(0,200,83,0.2)":u.status==="flagged"?"rgba(255,85,85,0.25)":"rgba(26,107,255,0.15)"}`,
+                      textTransform:"capitalize"}}>{u.status}</span></div>
+                    <div style={{display:"flex",gap:5}}>
+                      <button style={{padding:"5px 8px",background:"rgba(26,107,255,0.08)",border:"1px solid rgba(26,107,255,0.18)",borderRadius:6,cursor:"pointer"}}><Eye size={12} color="#4da6ff"/></button>
+                      {u.status!=="banned"&&u.status!=="active"&&(
+                        <button onClick={()=>ban(u.id)} disabled={banning===u.id} style={{padding:"5px 8px",background:"rgba(255,85,85,0.08)",border:"1px solid rgba(255,85,85,0.2)",borderRadius:6,cursor:"pointer"}}>
+                          {banning===u.id?<Loader2 size={12} color="#ff5555" style={{animation:"spin 1s linear infinite"}}/>:<Ban size={12} color="#ff5555"/>}
                         </button>
                       )}
                     </div>
@@ -188,37 +159,40 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* DISPUTES */}
-          {tab === "Disputes" && (
-            <div className="space-y-3 max-w-3xl">
-              {MOCK_DISPUTES.map(d => (
-                <div key={d.id} className="glass-card rounded-2xl p-5 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className={"w-10 h-10 rounded-xl flex items-center justify-center "+(d.status==="open" ? "bg-red-500/10" : "bg-green-500/10")}>
-                      {d.status==="open" ? <AlertTriangle size={18} className="text-red-400"/> : <CheckCircle2 size={18} className="text-green-400"/>}
-                    </div>
-                    <div>
-                      <div className="font-bold text-sm">{d.id} — {d.parties}</div>
-                      <div className="text-xs text-white/40">Opened {d.opened} · Disputed: <span className="text-red-400">${d.amount.toLocaleString()}</span></div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className={"text-xs px-3 py-1 rounded-full border font-medium "+(d.status==="open" ? "bg-red-500/10 text-red-400 border-red-500/20" : "bg-green-500/10 text-green-400 border-green-500/20")}>{d.status}</span>
-                    {d.status==="open" && <button className="text-xs px-3 py-1.5 rounded-lg bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/30 transition">Review</button>}
-                  </div>
+          {/* PLATFORM METRICS */}
+          {tab==="platform"&&(
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
+              {METRICS.map((m,i)=>(
+                <div key={i} style={{background:"rgba(4,15,36,0.9)",border:"1px solid rgba(26,107,255,0.14)",borderRadius:14,padding:"18px 16px"}}>
+                  <div style={{fontSize:"0.65rem",fontWeight:700,color:"rgba(255,255,255,0.38)",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>{m.label}</div>
+                  <div style={{fontSize:"1.5rem",fontWeight:900,marginBottom:4}}>{m.value}</div>
+                  <div style={{fontSize:"0.72rem",color:"#00e676",fontWeight:600}}>{m.change}</div>
                 </div>
               ))}
             </div>
           )}
 
-          {/* PLATFORM */}
-          {tab === "Platform" && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl">
-              {platformMetrics.map((m,i) => (
-                <div key={i} className="glass-card rounded-2xl p-5">
-                  <div className="text-xs text-white/40 mb-2">{m.label}</div>
-                  <div className="text-xl font-black mb-1">{m.value}</div>
-                  <div className="text-xs text-green-400">{m.change}</div>
+          {tab==="disputes"&&(
+            <div style={{maxWidth:700,display:"flex",flexDirection:"column",gap:10}}>
+              {[
+                {id:"DSP-1021",parties:"CloudSync AI vs Zoe L.",amount:2000,status:"open",    opened:"Jun 28"},
+                {id:"DSP-1019",parties:"RetailBoost vs Tom E.", amount:800, status:"resolved",opened:"Jun 20"},
+                {id:"DSP-1015",parties:"FinEdge vs Rina P.",    amount:1500,status:"open",    opened:"Jun 15"},
+              ].map((d,i)=>(
+                <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px 18px",background:"rgba(4,15,36,0.9)",border:`1px solid ${d.status==="open"?"rgba(255,85,85,0.2)":"rgba(0,200,83,0.15)"}`,borderRadius:14,gap:12}}>
+                  <div style={{display:"flex",alignItems:"center",gap:12}}>
+                    <div style={{width:36,height:36,borderRadius:10,background:d.status==="open"?"rgba(255,85,85,0.1)":"rgba(0,200,83,0.1)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                      {d.status==="open"?<AlertTriangle size={17} color="#ff5555"/>:<CheckCircle2 size={17} color="#00e676"/>}
+                    </div>
+                    <div>
+                      <div style={{fontWeight:700,fontSize:"0.9rem"}}>{d.id} — {d.parties}</div>
+                      <div style={{fontSize:"0.7rem",color:"rgba(255,255,255,0.4)"}}>Opened {d.opened} · Disputed: <span style={{color:"#ff5555",fontWeight:700}}>${d.amount.toLocaleString()}</span></div>
+                    </div>
+                  </div>
+                  <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                    <span style={{fontSize:"0.7rem",padding:"4px 10px",borderRadius:7,fontWeight:700,background:d.status==="open"?"rgba(255,85,85,0.1)":"rgba(0,200,83,0.1)",color:d.status==="open"?"#ff5555":"#00e676",border:`1px solid ${d.status==="open"?"rgba(255,85,85,0.25)":"rgba(0,200,83,0.2)"}`}}>{d.status}</span>
+                    {d.status==="open"&&<button style={{padding:"6px 12px",background:"rgba(240,192,64,0.12)",border:"1px solid rgba(240,192,64,0.25)",borderRadius:8,color:"#f0c040",fontSize:"0.75rem",fontWeight:700,cursor:"pointer"}}>Review</button>}
+                  </div>
                 </div>
               ))}
             </div>

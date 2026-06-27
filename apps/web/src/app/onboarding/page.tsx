@@ -1,223 +1,197 @@
 
 "use client";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Shield, User, Briefcase, CheckCircle2, ChevronRight,
-  Upload, Plus, X, Loader2, Sparkles,
-} from "lucide-react";
+import { VeritasEmblem, VeritasVerifiedBadge, NewMemberBadge } from "@/components/badges/VeritasBadges";
+import { CheckCircle2, ChevronRight, Plus, X, Loader2, Sparkles, Shield, Zap } from "lucide-react";
 
-const STEPS = [
-  { id:1, title:"Welcome",          icon:"👋" },
-  { id:2, title:"Your Role",        icon:"🎯" },
-  { id:3, title:"Skills & Rate",    icon:"⚡" },
-  { id:4, title:"Verify Identity",  icon:"🪪" },
-  { id:5, title:"Go Live",          icon:"🚀" },
-];
+const STEPS = ["Welcome","Your Skills","Set Your Rate","Get Verified","Launch"];
+const CATS  = [["💻","Development"],["🎨","Design"],["✍️","Writing"],["📈","Marketing"],["🎬","Video"],["🤝","Consulting"],["📊","Data"],["⚡","Web3"]];
 
-export default function OnboardingPage() {
+export default function OnboardingWorkerPage() {
   const router = useRouter();
-  const [step, setStep]       = useState(1);
-  const [role, setRole]       = useState<"worker"|"client"|"both"|"">("");
-  const [skills, setSkills]   = useState<string[]>([]);
-  const [skillInput, setSkillInput] = useState("");
-  const [rate, setRate]       = useState("");
+  const [step, setStep]       = useState(0);
+  const [name, setName]       = useState("");
+  const [cat, setCat]         = useState("");
   const [title, setTitle]     = useState("");
   const [bio, setBio]         = useState("");
-  const [verifying, setVerifying]   = useState(false);
-  const [verified, setVerified]     = useState(false);
+  const [skills, setSkills]   = useState<string[]>([]);
+  const [si, setSi]           = useState("");
+  const [rate, setRate]       = useState("");
+  const [avail, setAvail]     = useState("full-time");
+  const [verified, setVerified] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [completing, setCompleting] = useState(false);
 
-  function addSkill() {
-    if (skillInput.trim() && !skills.includes(skillInput.trim())) {
-      setSkills(prev => [...prev, skillInput.trim()]);
-      setSkillInput("");
-    }
-  }
+  function addSkill(){const s=si.trim();if(s&&!skills.includes(s)){setSkills(p=>[...p,s]);setSi("")}}
+  function doVerify(){setVerifying(true);setTimeout(()=>{setVerifying(false);setVerified(true);},1800);}
+  function finish(){setCompleting(true);setTimeout(()=>router.push("/dashboard"),1500);}
 
-  function removeSkill(s: string) { setSkills(prev => prev.filter(x => x !== s)); }
-
-  function doVerify() {
-    setVerifying(true);
-    setTimeout(() => { setVerifying(false); setVerified(true); }, 2000);
-  }
-
-  function finish() {
-    setCompleting(true);
-    setTimeout(() => router.push("/dashboard"), 1500);
-  }
-
-  function next() { setStep(s => Math.min(s + 1, 5)); }
-  function back() { setStep(s => Math.max(s - 1, 1)); }
+  const valid=[name.length>1,cat&&skills.length>0,rate.length>0,true,true];
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{background:"linear-gradient(135deg, #0a0a0f 0%, #0d1117 50%, #0a0a0f 100%)"}}>
-      <div className="w-full max-w-lg">
+    <div style={{minHeight:"100vh",background:"#010812",display:"flex",alignItems:"center",justifyContent:"center",padding:16,position:"relative"}}>
+      <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle,rgba(26,107,255,0.18) 1px,transparent 1px)",backgroundSize:"28px 28px",opacity:0.18}}/>
+      <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse 60% 50% at 50% 40%,rgba(26,107,255,0.1) 0%,transparent 70%)"}}/>
+      <div style={{position:"relative",zIndex:10,width:"100%",maxWidth:520}}>
 
         {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <Shield className="text-yellow-400" size={28}/>
-          <span className="text-2xl font-black gold-text italic">VERITAS</span>
-          <span className="text-xs text-white/40 uppercase tracking-widest">NETWORK</span>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,marginBottom:24}}>
+          <VeritasEmblem size={60}/>
+          <div style={{fontSize:"0.6rem",fontWeight:600,letterSpacing:"0.25em",color:"#00d4ff",textTransform:"uppercase"}}>Truth Becomes Trust</div>
         </div>
 
-        {/* Progress */}
-        <div className="flex items-center justify-between mb-8 px-2">
-          {STEPS.map((s,i) => (
-            <div key={s.id} className="flex items-center">
-              <div className={"flex flex-col items-center gap-1 "+(step > s.id ? "opacity-100" : step === s.id ? "opacity-100" : "opacity-30")}>
-                <div className={"w-9 h-9 rounded-xl flex items-center justify-center text-sm transition-all "+(step > s.id ? "bg-green-500 text-white" : step === s.id ? "bg-yellow-500 text-black font-bold" : "bg-white/10 text-white/50")}>
-                  {step > s.id ? <CheckCircle2 size={16}/> : s.icon}
-                </div>
-                <span className="text-xs text-white/40 hidden sm:block">{s.title}</span>
+        {/* Stepper */}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:4,marginBottom:22}}>
+          {STEPS.map((s,i)=>(
+            <div key={i} style={{display:"flex",alignItems:"center",gap:4}}>
+              <div style={{width:30,height:30,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.72rem",fontWeight:800,
+                background:step>i?"#00c853":step===i?"#1a6bff":"rgba(26,107,255,0.08)",
+                border:step>i||step===i?"none":"1px solid rgba(26,107,255,0.2)",
+                color:step>i||step===i?"white":"rgba(255,255,255,0.3)"}}>
+                {step>i?<CheckCircle2 size={13}/>:i+1}
               </div>
-              {i < STEPS.length-1 && <div className={"h-0.5 w-8 sm:w-12 mx-1 transition-all "+(step > s.id ? "bg-green-500" : "bg-white/10")}/>}
+              {i<STEPS.length-1&&<div style={{width:20,height:1,background:step>i?"#1a6bff":"rgba(26,107,255,0.15)"}}/>}
             </div>
           ))}
         </div>
 
         {/* Card */}
-        <div className="glass-card rounded-3xl p-8">
+        <div style={{background:"rgba(4,15,36,0.98)",border:"1.5px solid rgba(26,107,255,0.22)",borderRadius:24,padding:28,color:"white"}}>
 
-          {/* STEP 1: Welcome */}
-          {step === 1 && (
-            <div className="text-center">
-              <div className="text-5xl mb-4">👋</div>
-              <h2 className="text-2xl font-black mb-3">Welcome to Veritas Network</h2>
-              <p className="text-white/50 mb-8 leading-relaxed">The world's most trusted Web3 gig marketplace. Let's get your profile set up in under 5 minutes.</p>
-              <div className="grid grid-cols-3 gap-4 mb-8">
-                {[["🛡️","Trust-First","Every payment secured by blockchain escrow"],["🤖","AI-Matched","Jobs matched by our AI to your exact skillset"],["🏆","Build Reputation","Your TruScore travels with you forever"]].map(([i,t,d],idx) => (
-                  <div key={idx} className="p-4 rounded-2xl bg-white/5 text-center">
-                    <div className="text-2xl mb-2">{i}</div>
-                    <div className="font-bold text-sm mb-1">{t}</div>
-                    <div className="text-xs text-white/40">{d}</div>
+          {step===0&&(
+            <div style={{textAlign:"center"}}>
+              <div style={{fontSize:"2.5rem",marginBottom:12}}>👋</div>
+              <h2 style={{fontSize:"1.5rem",fontWeight:900,marginBottom:8}}>Welcome to Veritas</h2>
+              <p style={{color:"rgba(255,255,255,0.5)",marginBottom:20,lineHeight:1.7,fontSize:"0.88rem"}}>Build your portable reputation, find great clients, and get paid securely. Let's set up your profile in 3 minutes.</p>
+              <div style={{marginBottom:20}}>
+                <label style={{fontSize:"0.68rem",fontWeight:700,color:"rgba(255,255,255,0.4)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6,display:"block"}}>Your Full Name</label>
+                <input value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Alex Chen" style={{width:"100%",padding:"12px 16px",background:"rgba(6,18,41,0.8)",border:"1px solid rgba(26,107,255,0.2)",borderRadius:10,color:"white",fontSize:"0.92rem",outline:"none"}}/>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:20}}>
+                {[["🛡️","Trust Score","Builds with every job"],["💰","Smart Escrow","Every payment protected"],["🏆","NFT Badge","Reputation lives on-chain"]].map(([ic,t,d],i)=>(
+                  <div key={i} style={{padding:12,background:"rgba(26,107,255,0.06)",border:"1px solid rgba(26,107,255,0.14)",borderRadius:12,textAlign:"center"}}>
+                    <div style={{fontSize:"1.4rem",marginBottom:5}}>{ic}</div>
+                    <div style={{fontWeight:700,fontSize:"0.78rem",marginBottom:2}}>{t}</div>
+                    <div style={{fontSize:"0.62rem",color:"rgba(255,255,255,0.38)",lineHeight:1.4}}>{d}</div>
                   </div>
                 ))}
               </div>
-              <button onClick={next} className="w-full py-3.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-black font-black text-lg transition">Get Started →</button>
+              <button onClick={()=>setStep(1)} disabled={!name} style={{width:"100%",padding:"13px",background:"linear-gradient(135deg,#1a6bff,#0050dd)",border:"none",borderRadius:10,color:"white",fontWeight:800,fontSize:"0.95rem",cursor:"pointer",opacity:!name?0.4:1}}>Let's Go →</button>
             </div>
           )}
 
-          {/* STEP 2: Role */}
-          {step === 2 && (
+          {step===1&&(
             <div>
-              <h2 className="text-xl font-black mb-2">How will you use Veritas?</h2>
-              <p className="text-white/50 text-sm mb-6">You can change this anytime in settings.</p>
-              <div className="space-y-3 mb-8">
-                {[
-                  { id:"worker", icon:"👷", title:"I'm a Freelancer / Service Provider", desc:"Find clients, get paid, build my reputation" },
-                  { id:"client", icon:"🏢", title:"I'm a Client / Business",             desc:"Hire talent, manage projects, pay securely" },
-                  { id:"both",   icon:"⚡", title:"Both — I do both",                     desc:"Switch between hiring and working" },
-                ].map(r => (
-                  <button key={r.id} onClick={() => setRole(r.id as any)} className={"w-full flex items-center gap-4 p-4 rounded-2xl border text-left transition "+(role===r.id ? "border-yellow-500/50 bg-yellow-500/10" : "border-white/10 hover:border-white/20 hover:bg-white/3")}>
-                    <span className="text-2xl">{r.icon}</span>
-                    <div><div className="font-bold">{r.title}</div><div className="text-sm text-white/50">{r.desc}</div></div>
-                    {role===r.id && <CheckCircle2 size={18} className="text-yellow-400 ml-auto"/>}
+              <h2 style={{fontSize:"1.2rem",fontWeight:900,marginBottom:16}}>What do you do?</h2>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:7,marginBottom:14}}>
+                {CATS.map(([ic,c])=>(
+                  <button key={c} onClick={()=>setCat(c)} style={{padding:"10px 6px",background:cat===c?"rgba(26,107,255,0.15)":"rgba(26,107,255,0.04)",border:`1px solid ${cat===c?"rgba(26,107,255,0.45)":"rgba(26,107,255,0.1)"}`,borderRadius:10,cursor:"pointer",textAlign:"center"}}>
+                    <div style={{fontSize:"1.2rem",marginBottom:3}}>{ic}</div>
+                    <div style={{fontSize:"0.65rem",fontWeight:700,color:cat===c?"#4da6ff":"rgba(255,255,255,0.5)"}}>{c}</div>
                   </button>
                 ))}
               </div>
-              <div className="flex gap-3">
-                <button onClick={back} className="flex-1 py-3 rounded-xl border border-white/10 text-white/60 hover:text-white transition">Back</button>
-                <button onClick={next} disabled={!role} className="flex-1 py-3 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-black font-bold disabled:opacity-40 transition">Continue →</button>
+              <div style={{marginBottom:10}}>
+                <label style={{fontSize:"0.68rem",fontWeight:700,color:"rgba(255,255,255,0.4)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6,display:"block"}}>Professional Title</label>
+                <input value={title} onChange={e=>setTitle(e.target.value)} placeholder="e.g. Full-Stack React Developer" style={{width:"100%",padding:"11px 14px",background:"rgba(6,18,41,0.8)",border:"1px solid rgba(26,107,255,0.2)",borderRadius:9,color:"white",fontSize:"0.88rem",outline:"none",marginBottom:10}}/>
+                <label style={{fontSize:"0.68rem",fontWeight:700,color:"rgba(255,255,255,0.4)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6,display:"block"}}>Add Your Top Skills</label>
+                <div style={{display:"flex",gap:7,marginBottom:8}}>
+                  <input value={si} onChange={e=>setSi(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addSkill()} placeholder="e.g. React, Figma, Python..." style={{flex:1,padding:"10px 13px",background:"rgba(6,18,41,0.8)",border:"1px solid rgba(26,107,255,0.2)",borderRadius:9,color:"white",fontSize:"0.85rem",outline:"none"}}/>
+                  <button onClick={addSkill} style={{padding:"10px 14px",background:"rgba(26,107,255,0.12)",border:"1px solid rgba(26,107,255,0.25)",borderRadius:9,color:"#4da6ff",cursor:"pointer",fontWeight:700}}><Plus size={15}/></button>
+                </div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                  {skills.map(s=><span key={s} style={{display:"flex",alignItems:"center",gap:5,padding:"5px 11px",background:"rgba(26,107,255,0.1)",border:"1px solid rgba(26,107,255,0.22)",borderRadius:7,fontSize:"0.76rem",color:"#4da6ff",fontWeight:600}}>{s}<button onClick={()=>setSkills(p=>p.filter(x=>x!==s))} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,0.35)",padding:0,lineHeight:1}}><X size={11}/></button></span>)}
+                </div>
+              </div>
+              <div style={{display:"flex",gap:10,marginTop:16}}>
+                <button onClick={()=>setStep(0)} style={{flex:1,padding:"11px",borderRadius:10,border:"1px solid rgba(26,107,255,0.15)",background:"transparent",color:"rgba(255,255,255,0.5)",cursor:"pointer"}}>← Back</button>
+                <button onClick={()=>setStep(2)} disabled={!cat||skills.length===0} style={{flex:2,padding:"11px",background:"linear-gradient(135deg,#1a6bff,#0050dd)",border:"none",borderRadius:10,color:"white",fontWeight:700,cursor:"pointer",opacity:!cat||skills.length===0?0.4:1}}>Continue →</button>
               </div>
             </div>
           )}
 
-          {/* STEP 3: Skills */}
-          {step === 3 && (
+          {step===2&&(
             <div>
-              <h2 className="text-xl font-black mb-2">Skills & Professional Title</h2>
-              <p className="text-white/50 text-sm mb-6">This powers your AI job matching.</p>
-              <div className="space-y-4 mb-6">
-                <div>
-                  <label className="text-xs text-white/50 mb-2 block uppercase tracking-wide">Professional Title</label>
-                  <input value={title} onChange={e=>setTitle(e.target.value)} placeholder="e.g. Full-Stack Developer" className="veritas-input"/>
+              <h2 style={{fontSize:"1.2rem",fontWeight:900,marginBottom:16}}>Set Your Rate</h2>
+              <div style={{marginBottom:14}}>
+                <label style={{fontSize:"0.68rem",fontWeight:700,color:"rgba(255,255,255,0.4)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6,display:"block"}}>Hourly Rate (USD)</label>
+                <div style={{position:"relative"}}>
+                  <span style={{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",color:"rgba(255,255,255,0.4)",fontWeight:700}}>$</span>
+                  <input value={rate} onChange={e=>setRate(e.target.value)} type="number" placeholder="150" style={{width:"100%",padding:"12px 14px 12px 28px",background:"rgba(6,18,41,0.8)",border:"1px solid rgba(26,107,255,0.2)",borderRadius:9,color:"white",fontSize:"1.1rem",fontWeight:700,outline:"none"}}/>
+                  <span style={{position:"absolute",right:14,top:"50%",transform:"translateY(-50%)",color:"rgba(255,255,255,0.35)",fontSize:"0.8rem"}}>/hr</span>
                 </div>
-                <div>
-                  <label className="text-xs text-white/50 mb-2 block uppercase tracking-wide">Hourly Rate (USD)</label>
-                  <input value={rate} onChange={e=>setRate(e.target.value)} type="number" placeholder="150" className="veritas-input"/>
-                </div>
-                <div>
-                  <label className="text-xs text-white/50 mb-2 block uppercase tracking-wide">Add Skills</label>
-                  <div className="flex gap-2 mb-3">
-                    <input value={skillInput} onChange={e=>setSkillInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addSkill()} placeholder="e.g. React, Figma, Python..." className="veritas-input flex-1"/>
-                    <button onClick={addSkill} className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 transition"><Plus size={16}/></button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {skills.map(s => (
-                      <span key={s} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-yellow-500/15 border border-yellow-500/30 text-yellow-400 text-sm">
-                        {s}<button onClick={()=>removeSkill(s)} className="hover:text-red-400 transition"><X size={12}/></button>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs text-white/50 mb-2 block uppercase tracking-wide">Bio (optional)</label>
-                  <textarea value={bio} onChange={e=>setBio(e.target.value)} rows={3} placeholder="Brief intro for your profile..." className="veritas-input resize-none text-sm"/>
+                <div style={{fontSize:"0.68rem",color:"rgba(255,255,255,0.3)",marginTop:5}}>Market average for {cat}: $75–$150/hr · Top earners: $200+</div>
+              </div>
+              <div style={{marginBottom:14}}>
+                <label style={{fontSize:"0.68rem",fontWeight:700,color:"rgba(255,255,255,0.4)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6,display:"block"}}>Availability</label>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:7}}>
+                  {[["full-time","Full-time","40h/wk"],["part-time","Part-time","20h/wk"],["contract","Project","As needed"]].map(([v,l,d])=>(
+                    <button key={v} onClick={()=>setAvail(v)} style={{padding:"10px 8px",background:avail===v?"rgba(26,107,255,0.14)":"rgba(26,107,255,0.04)",border:`1px solid ${avail===v?"rgba(26,107,255,0.4)":"rgba(26,107,255,0.1)"}`,borderRadius:9,cursor:"pointer",textAlign:"center"}}>
+                      <div style={{fontWeight:700,fontSize:"0.8rem",color:avail===v?"#4da6ff":"rgba(255,255,255,0.6)",marginBottom:2}}>{l}</div>
+                      <div style={{fontSize:"0.62rem",color:"rgba(255,255,255,0.35)"}}>{d}</div>
+                    </button>
+                  ))}
                 </div>
               </div>
-              <div className="flex gap-3">
-                <button onClick={back} className="flex-1 py-3 rounded-xl border border-white/10 text-white/60 hover:text-white transition">Back</button>
-                <button onClick={next} disabled={!title||skills.length===0} className="flex-1 py-3 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-black font-bold disabled:opacity-40 transition">Continue →</button>
+              <div style={{marginBottom:14}}>
+                <label style={{fontSize:"0.68rem",fontWeight:700,color:"rgba(255,255,255,0.4)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6,display:"block"}}>Short Bio</label>
+                <textarea value={bio} onChange={e=>setBio(e.target.value)} rows={3} placeholder="A brief intro — your experience, specialties, and what makes you different..." style={{width:"100%",padding:"11px 14px",background:"rgba(6,18,41,0.8)",border:"1px solid rgba(26,107,255,0.2)",borderRadius:9,color:"white",fontSize:"0.85rem",outline:"none",resize:"none",lineHeight:1.5}}/>
+              </div>
+              <div style={{display:"flex",gap:10}}>
+                <button onClick={()=>setStep(1)} style={{flex:1,padding:"11px",borderRadius:10,border:"1px solid rgba(26,107,255,0.15)",background:"transparent",color:"rgba(255,255,255,0.5)",cursor:"pointer"}}>← Back</button>
+                <button onClick={()=>setStep(3)} disabled={!rate} style={{flex:2,padding:"11px",background:"linear-gradient(135deg,#1a6bff,#0050dd)",border:"none",borderRadius:10,color:"white",fontWeight:700,cursor:"pointer",opacity:!rate?0.4:1}}>Continue →</button>
               </div>
             </div>
           )}
 
-          {/* STEP 4: Verify */}
-          {step === 4 && (
-            <div>
-              <h2 className="text-xl font-black mb-2">Verify Your Identity</h2>
-              <p className="text-white/50 text-sm mb-6">Verified users earn 3x more and get priority placement. Takes 60 seconds.</p>
-              {!verified ? (
-                <div>
-                  <div className="space-y-3 mb-6">
-                    {[
-                      { icon:"📧", label:"Email Verified",  done:true  },
-                      { icon:"📱", label:"Phone Verified",  done:false },
-                      { icon:"🪪", label:"Government ID",   done:false },
-                    ].map((v,i) => (
-                      <div key={i} className={"flex items-center justify-between p-4 rounded-xl border "+(v.done ? "border-green-500/20 bg-green-500/5" : "border-white/10")}>
-                        <div className="flex items-center gap-3">
-                          <span className="text-xl">{v.icon}</span>
-                          <span className="font-medium text-sm">{v.label}</span>
-                        </div>
-                        {v.done ? <CheckCircle2 size={16} className="text-green-400"/> : <span className="text-xs text-white/30">Pending</span>}
+          {step===3&&(
+            <div style={{textAlign:"center"}}>
+              {!verified?(
+                <>
+                  <div style={{fontSize:"2rem",marginBottom:12}}>🪪</div>
+                  <h2 style={{fontSize:"1.2rem",fontWeight:900,marginBottom:8}}>Verify Your Identity</h2>
+                  <p style={{color:"rgba(255,255,255,0.5)",marginBottom:20,fontSize:"0.85rem",lineHeight:1.65}}>Verified workers earn <strong style={{color:"#f0c040"}}>3x more</strong> and get priority in AI matching. Takes 60 seconds.</p>
+                  <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:20,textAlign:"left"}}>
+                    {[["✅","Email","Confirmed",true],["📱","Phone","Add for +10 pts",false],["🪪","Government ID","Add for +20 pts",false]].map(([ic,l,d,done],i)=>(
+                      <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"11px 14px",background:done?"rgba(0,200,83,0.06)":"rgba(26,107,255,0.04)",border:`1px solid ${done?"rgba(0,200,83,0.2)":"rgba(26,107,255,0.12)"}`,borderRadius:10}}>
+                        <span style={{fontSize:"1.1rem"}}>{ic}</span>
+                        <div style={{flex:1}}><div style={{fontWeight:600,fontSize:"0.85rem",color:done?"#00e676":"white"}}>{l}</div><div style={{fontSize:"0.65rem",color:"rgba(255,255,255,0.38)"}}>{d}</div></div>
+                        {done?<CheckCircle2 size={15} color="#00e676"/>:<ChevronRight size={15} color="rgba(255,255,255,0.2)"/>}
                       </div>
                     ))}
                   </div>
-                  <button onClick={doVerify} disabled={verifying} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-black font-bold transition disabled:opacity-60 mb-3">
-                    {verifying ? <><Loader2 size={16} className="animate-spin"/> Verifying...</> : <><Upload size={16}/> Start Verification</>}
+                  <button onClick={doVerify} disabled={verifying} style={{width:"100%",padding:"13px",background:"linear-gradient(135deg,#1a6bff,#0050dd)",border:"none",borderRadius:10,color:"white",fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:10,fontSize:"0.92rem"}}>
+                    {verifying?<><Loader2 size={16} style={{animation:"spin 1s linear infinite"}}/>Verifying...</>:<><Shield size={16}/>Verify Now (+30 Trust Score)</>}
                   </button>
-                  <button onClick={next} className="w-full py-2.5 rounded-xl border border-white/10 text-white/50 text-sm hover:text-white transition">Skip for now</button>
-                </div>
-              ) : (
-                <div className="text-center py-6">
-                  <CheckCircle2 size={56} className="text-green-400 mx-auto mb-3"/>
-                  <div className="font-black text-xl mb-2 text-green-400">Identity Verified!</div>
-                  <div className="text-sm text-white/50 mb-6">Your TruScore has been boosted by +10 points for completing verification.</div>
-                  <button onClick={next} className="w-full py-3 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-black font-bold transition">Continue →</button>
-                </div>
+                  <button onClick={()=>setStep(4)} style={{width:"100%",padding:"11px",borderRadius:10,border:"1px solid rgba(26,107,255,0.15)",background:"transparent",color:"rgba(255,255,255,0.4)",cursor:"pointer",fontSize:"0.82rem"}}>Skip for now</button>
+                </>
+              ):(
+                <>
+                  <div style={{display:"flex",justifyContent:"center",marginBottom:14}}><NewMemberBadge size={120}/></div>
+                  <h2 style={{fontSize:"1.3rem",fontWeight:900,marginBottom:6,color:"#00e676"}}>Identity Verified! 🎉</h2>
+                  <p style={{color:"rgba(255,255,255,0.5)",marginBottom:16,fontSize:"0.85rem"}}>+30 Trust Score points added. New Member badge earned.</p>
+                  <button onClick={()=>setStep(4)} style={{width:"100%",padding:"13px",background:"linear-gradient(135deg,#1a6bff,#0050dd)",border:"none",borderRadius:10,color:"white",fontWeight:700,cursor:"pointer"}}>Almost Done →</button>
+                </>
               )}
             </div>
           )}
 
-          {/* STEP 5: Done */}
-          {step === 5 && (
-            <div className="text-center">
-              <div className="text-6xl mb-4">🚀</div>
-              <h2 className="text-2xl font-black mb-3">You're All Set!</h2>
-              <p className="text-white/50 mb-6 leading-relaxed">Welcome to Veritas Network. Your profile is live and our AI is already finding job matches for you.</p>
-              <div className="grid grid-cols-3 gap-3 mb-8">
-                {[["TruScore","72"],["Matches","14"],["Badges","2"]].map(([l,v],i) => (
-                  <div key={i} className="p-4 rounded-2xl bg-yellow-500/10 border border-yellow-500/20">
-                    <div className="text-2xl font-black gold-text">{v}</div>
-                    <div className="text-xs text-white/50 mt-1">{l}</div>
+          {step===4&&(
+            <div style={{textAlign:"center"}}>
+              <div style={{display:"flex",justifyContent:"center",marginBottom:14}}><VeritasVerifiedBadge score={verified?420:350} size={150}/></div>
+              <h2 style={{fontSize:"1.5rem",fontWeight:900,marginBottom:6}}>You're Live, {name}! 🚀</h2>
+              <p style={{color:"rgba(255,255,255,0.5)",marginBottom:20,fontSize:"0.87rem",lineHeight:1.65}}>Your profile is active. AI is already scanning for job matches based on your skills.</p>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:20}}>
+                {[["Trust Score",verified?"420":"350","#00e676"],["AI Matches","14","#f0c040"],["Badges",verified?"2":"1","#4da6ff"]].map(([l,v,c],i)=>(
+                  <div key={i} style={{padding:12,background:"rgba(26,107,255,0.08)",border:"1px solid rgba(26,107,255,0.18)",borderRadius:12}}>
+                    <div style={{fontSize:"1.6rem",fontWeight:900,color:c,lineHeight:1,marginBottom:3}}>{v}</div>
+                    <div style={{fontSize:"0.65rem",color:"rgba(255,255,255,0.4)"}}>{l}</div>
                   </div>
                 ))}
               </div>
-              <button onClick={finish} className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-black font-black text-lg transition">
-                {completing ? <><Loader2 size={20} className="animate-spin"/> Taking you in...</> : <><Sparkles size={20}/> Enter Veritas →</>}
+              <button onClick={finish} style={{width:"100%",padding:"14px",background:"linear-gradient(135deg,#d4af37,#c9a227,#a07810)",border:"none",borderRadius:10,color:"#0a0800",fontWeight:800,fontSize:"1rem",cursor:"pointer",boxShadow:"0 4px 20px rgba(201,162,39,0.35)",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+                {completing?<><Loader2 size={18} style={{animation:"spin 1s linear infinite"}}/>Loading...</>:<><Sparkles size={18}/>Enter Veritas</>}
               </button>
             </div>
           )}

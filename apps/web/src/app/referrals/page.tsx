@@ -1,115 +1,110 @@
 
 "use client";
-
 import { useState } from "react";
 import Sidebar from "@/components/sidebar/Sidebar";
 import TopBar from "@/components/topbar/TopBar";
-import { Gift, Copy, CheckCheck, Users, DollarSign, TrendingUp, Share2, ChevronRight, Zap, Star } from "lucide-react";
+import { VeritasEmblem } from "@/components/badges/VeritasBadges";
+import { Gift, Copy, CheckCheck, Users, DollarSign, TrendingUp, Share2, Star, Zap, ChevronRight } from "lucide-react";
 
-export default function ReferralsPage() {
+const REFERRALS = [
+  {name:"Jordan Lee",   joined:"Jun 10", status:"active",  earned:142.50, tier:"Worker", jobs:8  },
+  {name:"Priya Nair",   joined:"May 28", status:"active",  earned:89.00,  tier:"Worker", jobs:5  },
+  {name:"Mike Okafor",  joined:"May 15", status:"pending", earned:0,      tier:"Client", jobs:0  },
+  {name:"Tanya Brooks", joined:"Apr 30", status:"active",  earned:220.75, tier:"Worker", jobs:14 },
+  {name:"Carlos Rivera",joined:"Apr 12", status:"active",  earned:167.20, tier:"Client", jobs:0  },
+  {name:"Yuki Tanaka",  joined:"Mar 5",  status:"active",  earned:312.00, tier:"Worker", jobs:22 },
+];
+
+const TIERS = [
+  {range:"1–5 referrals",  pct:"10%", bonus:"",          active:true,  desc:"10% of their first 3 months of platform fees"},
+  {range:"6–20 referrals", pct:"12%", bonus:"+$50 each", active:false, desc:"12% commission + $50 cash bonus per referral"},
+  {range:"21+ referrals",  pct:"15%", bonus:"Partner",   active:false, desc:"15% commission + dedicated partner manager"},
+];
+
+export default function ReferralsV2Page() {
   const [copied, setCopied] = useState(false);
-  const refCode = "SCOTT-V9X2K";
-  const refLink = `https://veritas.network/join?ref=${refCode}`;
+  const refLink = "https://veritas.network/join?ref=SCOTT-V9X2K";
+  const total   = REFERRALS.reduce((a,r)=>a+r.earned,0);
+  const active  = REFERRALS.filter(r=>r.status==="active").length;
 
-  function copy() {
-    navigator.clipboard.writeText(refLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
-  const referrals = [
-    { name:"Jordan Lee",    joined:"Jun 10",  status:"active",  earned:142.50, tier:"Worker"  },
-    { name:"Priya Nair",    joined:"May 28",  status:"active",  earned:89.00,  tier:"Worker"  },
-    { name:"Mike Okafor",   joined:"May 15",  status:"pending", earned:0,      tier:"Client"  },
-    { name:"Tanya Brooks",  joined:"Apr 30",  status:"active",  earned:220.75, tier:"Worker"  },
-    { name:"Carlos Rivera", joined:"Apr 12",  status:"active",  earned:167.20, tier:"Client"  },
-  ];
-
-  const totalEarned  = referrals.reduce((a,r) => a + r.earned, 0);
-  const activeCount  = referrals.filter(r => r.status === "active").length;
-  const pendingCount = referrals.filter(r => r.status === "pending").length;
-
-  const tiers = [
-    { range:"1–5 referrals",  pct:"10%", desc:"10% of their first 3 months of platform fees",  active: referrals.length <= 5 },
-    { range:"6–20 referrals", pct:"12%", desc:"12% commission + bonus $50/referral",             active: false },
-    { range:"21+ referrals",  pct:"15%", desc:"15% commission + dedicated partner manager",      active: false },
-  ];
+  function copy(){ navigator.clipboard.writeText(refLink); setCopied(true); setTimeout(()=>setCopied(false),2000); }
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <TopBar />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+    <div style={{display:"flex",minHeight:"100vh",background:"#010812"}}>
+      <Sidebar/>
+      <div style={{flex:1,display:"flex",flexDirection:"column"}}>
+        <TopBar/>
+        <main style={{flex:1,overflowY:"auto",padding:24,color:"white"}}>
 
-          <div className="flex items-center gap-3 mb-6">
-            <Gift className="text-yellow-400" size={28}/>
-            <h1 className="text-3xl font-black gold-text">Referral Program</h1>
+          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:24}}>
+            <Gift size={28} color="#f0c040"/>
+            <h1 style={{fontSize:"1.8rem",fontWeight:900,margin:0}}>Referral Program</h1>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:20}}>
             {[
-              { icon:Users,      label:"Total Referrals",  value: referrals.length,          color:"text-cyan-400"   },
-              { icon:Zap,        label:"Active",           value: activeCount,                color:"text-green-400"  },
-              { icon:DollarSign, label:"Total Earned",     value:`$${totalEarned.toFixed(2)}`,color:"text-yellow-400" },
-              { icon:TrendingUp, label:"This Month",       value:"$182.50",                   color:"text-purple-400" },
-            ].map((s,i) => {
-              const Icon = s.icon;
-              return (
-                <div key={i} className="glass-card rounded-2xl p-5">
-                  <Icon size={20} className={s.color}/>
-                  <div className="text-2xl font-black mt-3 mb-1">{s.value}</div>
-                  <div className="text-xs text-white/50">{s.label}</div>
+              {icon:<Users size={20}/>,     label:"Total Referrals", value:REFERRALS.length, color:"#4da6ff"},
+              {icon:<Zap size={20}/>,       label:"Active",          value:active,           color:"#00e676"},
+              {icon:<DollarSign size={20}/>,label:"Total Earned",    value:`$${total.toFixed(2)}`, color:"#f0c040"},
+              {icon:<TrendingUp size={20}/>,label:"This Month",      value:"$182.50",        color:"#00d4ff"},
+            ].map((s,i)=>{
+              const Icon=s.icon;
+              return(
+                <div key={i} style={{background:"rgba(4,15,36,0.9)",border:"1px solid rgba(26,107,255,0.14)",borderRadius:14,padding:"18px 16px"}}>
+                  <div style={{color:s.color,marginBottom:8}}>{s.icon}</div>
+                  <div style={{fontSize:"1.7rem",fontWeight:900,color:s.color,lineHeight:1,marginBottom:3}}>{s.value}</div>
+                  <div style={{fontSize:"0.7rem",color:"rgba(255,255,255,0.4)"}}>{s.label}</div>
                 </div>
               );
             })}
           </div>
 
-          {/* Referral Link */}
-          <div className="glass-card rounded-3xl p-6 mb-6">
-            <h3 className="font-bold mb-4 flex items-center gap-2"><Share2 size={16} className="text-yellow-400"/>Your Referral Link</h3>
-            <div className="flex gap-3 mb-4">
-              <div className="flex-1 flex items-center bg-black/30 rounded-xl px-4 py-3 border border-white/10">
-                <span className="text-sm font-mono text-white/70 truncate">{refLink}</span>
+          {/* Referral link */}
+          <div style={{background:"rgba(4,15,36,0.9)",border:"1px solid rgba(26,107,255,0.18)",borderRadius:16,padding:22,marginBottom:20}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
+              <Share2 size={18} color="#f0c040"/>
+              <span style={{fontWeight:800,fontSize:"0.95rem"}}>Your Referral Link</span>
+            </div>
+            <div style={{display:"flex",gap:10,marginBottom:14}}>
+              <div style={{flex:1,display:"flex",alignItems:"center",background:"rgba(6,18,41,0.8)",border:"1px solid rgba(26,107,255,0.18)",borderRadius:10,padding:"11px 16px"}}>
+                <span style={{fontSize:"0.85rem",fontFamily:"monospace",color:"rgba(255,255,255,0.6)",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{refLink}</span>
               </div>
-              <button onClick={copy} className="flex items-center gap-2 px-5 py-3 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-black font-bold text-sm transition flex-shrink-0">
-                {copied ? <CheckCheck size={16}/> : <Copy size={16}/>}
-                {copied ? "Copied!" : "Copy"}
+              <button onClick={copy} style={{display:"flex",alignItems:"center",gap:7,padding:"11px 20px",background:copied?"rgba(0,200,83,0.15)":"linear-gradient(135deg,#1a6bff,#0050dd)",border:copied?"1px solid rgba(0,200,83,0.3)":"none",borderRadius:10,color:"white",fontWeight:700,fontSize:"0.85rem",cursor:"pointer",flexShrink:0,transition:"all 0.2s",boxShadow:copied?"none":"0 3px 14px rgba(26,107,255,0.35)"}}>
+                {copied?<CheckCheck size={15}/>:<Copy size={15}/>}{copied?"Copied!":"Copy"}
               </button>
             </div>
-            <div className="flex gap-3">
-              {[
-                { label:"Share on X",        icon:"𝕏", bg:"bg-black" },
-                { label:"Share on LinkedIn",  icon:"in",bg:"bg-blue-700" },
-                { label:"Send Email",         icon:"✉️", bg:"bg-white/10" },
-              ].map((btn,i) => (
-                <button key={i} className={"flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition hover:opacity-90 "+btn.bg}>
-                  <span>{btn.icon}</span>{btn.label}
+            <div style={{display:"flex",gap:9,flexWrap:"wrap"}}>
+              {[["𝕏","Share on X","rgba(0,0,0,0.6)"],["in","LinkedIn","rgba(0,100,200,0.3)"],["✉️","Email","rgba(26,107,255,0.12)"],["📱","WhatsApp","rgba(0,200,83,0.12)"]].map(([ic,l,bg],i)=>(
+                <button key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 14px",background:bg,border:"1px solid rgba(255,255,255,0.08)",borderRadius:9,color:"rgba(255,255,255,0.7)",fontSize:"0.78rem",fontWeight:600,cursor:"pointer"}}>
+                  <span>{ic}</span>{l}
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="flex gap-6">
-            {/* Referral List */}
-            <div className="flex-1">
-              <h3 className="font-bold mb-4">Your Referrals</h3>
-              <div className="glass-card rounded-2xl overflow-hidden">
-                {referrals.map((r,i) => (
-                  <div key={i} className="flex items-center justify-between px-5 py-4 border-b border-white/5 last:border-0 hover:bg-white/3 transition">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-500/20 to-cyan-500/20 flex items-center justify-center font-bold text-sm">{r.name[0]}</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 280px",gap:20}}>
+            {/* Referral list */}
+            <div>
+              <div style={{fontWeight:800,marginBottom:12,fontSize:"0.9rem"}}>Your Referrals</div>
+              <div style={{background:"rgba(4,15,36,0.9)",border:"1px solid rgba(26,107,255,0.12)",borderRadius:16,overflow:"hidden"}}>
+                {REFERRALS.map((r,i)=>(
+                  <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 18px",borderBottom:i<REFERRALS.length-1?"1px solid rgba(26,107,255,0.07)":"none"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:12}}>
+                      <div style={{width:38,height:38,borderRadius:10,background:"linear-gradient(135deg,#1a3a6b,#0d1f3d)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:"0.88rem"}}>{r.name[0]}</div>
                       <div>
-                        <div className="font-medium text-sm">{r.name}</div>
-                        <div className="text-xs text-white/40">Joined {r.joined} · {r.tier}</div>
+                        <div style={{fontWeight:700,fontSize:"0.88rem",marginBottom:1}}>{r.name}</div>
+                        <div style={{fontSize:"0.68rem",color:"rgba(255,255,255,0.38)"}}>Joined {r.joined} · {r.tier}{r.jobs>0?` · ${r.jobs} jobs`:""}</div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <span className={"text-xs px-2 py-0.5 rounded-full font-medium "+(r.status==="active" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-white/5 text-white/40")}>{r.status}</span>
-                      <div className="text-right">
-                        <div className="text-sm font-bold text-green-400">${r.earned.toFixed(2)}</div>
-                        <div className="text-xs text-white/30">earned</div>
+                    <div style={{display:"flex",alignItems:"center",gap:12}}>
+                      <span style={{fontSize:"0.65rem",padding:"3px 8px",borderRadius:5,fontWeight:700,
+                        background:r.status==="active"?"rgba(0,200,83,0.1)":"rgba(255,255,255,0.05)",
+                        border:`1px solid ${r.status==="active"?"rgba(0,200,83,0.2)":"rgba(255,255,255,0.1)"}`,
+                        color:r.status==="active"?"#00e676":"rgba(255,255,255,0.4)"}}>{r.status}</span>
+                      <div style={{textAlign:"right"}}>
+                        <div style={{fontWeight:800,color:"#00e676",fontSize:"0.9rem"}}>${r.earned.toFixed(2)}</div>
+                        <div style={{fontSize:"0.62rem",color:"rgba(255,255,255,0.3)"}}>earned</div>
                       </div>
                     </div>
                   </div>
@@ -117,21 +112,22 @@ export default function ReferralsPage() {
               </div>
             </div>
 
-            {/* Commission Tiers */}
-            <div className="w-72 flex-shrink-0 space-y-4">
-              <h3 className="font-bold">Commission Tiers</h3>
-              {tiers.map((t,i) => (
-                <div key={i} className={"glass-card rounded-2xl p-4 border "+(t.active ? "border-yellow-500/30 bg-yellow-500/5" : "border-white/5")}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-white/70">{t.range}</span>
-                    <span className={"text-lg font-black "+(t.active ? "gold-text" : "text-white/40")}>{t.pct}</span>
+            {/* Tier panel */}
+            <div style={{display:"flex",flexDirection:"column",gap:12}}>
+              <div style={{fontWeight:800,marginBottom:0,fontSize:"0.9rem"}}>Commission Tiers</div>
+              {TIERS.map((t,i)=>(
+                <div key={i} style={{background:"rgba(4,15,36,0.9)",border:`1px solid ${t.active?"rgba(240,192,64,0.35)":"rgba(26,107,255,0.12)"}`,borderRadius:14,padding:16}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
+                    <span style={{fontSize:"0.8rem",color:"rgba(255,255,255,0.65)",fontWeight:600}}>{t.range}</span>
+                    <span style={{fontSize:"1.3rem",fontWeight:900,color:t.active?"#f0c040":"rgba(255,255,255,0.35)"}}>{t.pct}</span>
                   </div>
-                  <p className="text-xs text-white/40">{t.desc}</p>
-                  {t.active && <div className="mt-2 text-xs text-yellow-400 flex items-center gap-1"><Star size={10} fill="currentColor"/> Current Tier</div>}
+                  <div style={{fontSize:"0.72rem",color:"rgba(255,255,255,0.4)",lineHeight:1.5,marginBottom:t.active?8:0}}>{t.desc}</div>
+                  {t.active&&<div style={{fontSize:"0.65rem",color:"#f0c040",fontWeight:700,display:"flex",alignItems:"center",gap:4}}><Star size={10} fill="currentColor"/>Current Tier</div>}
+                  {t.bonus&&<div style={{fontSize:"0.65rem",color:"#00e676",fontWeight:700,marginTop:4}}>+ {t.bonus}</div>}
                 </div>
               ))}
-              <div className="glass-card rounded-2xl p-4 border border-white/5">
-                <div className="text-xs text-white/50 leading-relaxed">Commissions are paid monthly. Minimum payout is $25. Referred users must complete at least one paid job.</div>
+              <div style={{padding:12,background:"rgba(26,107,255,0.04)",border:"1px solid rgba(26,107,255,0.1)",borderRadius:12,fontSize:"0.72rem",color:"rgba(255,255,255,0.4)",lineHeight:1.65}}>
+                Commissions paid monthly. Min payout $25. Referred users must complete one paid job to qualify.
               </div>
             </div>
           </div>

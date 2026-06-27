@@ -1,222 +1,175 @@
-"use client";
 
-import { useState, useEffect } from "react";
+"use client";
+import { useState } from "react";
 import Sidebar from "@/components/sidebar/Sidebar";
 import TopBar from "@/components/topbar/TopBar";
-import { Vault, DollarSign, Clock, CheckCircle2, AlertTriangle, Shield, TrendingUp, Plus, ChevronRight, Loader2, X, Lock, Unlock, Scale } from "lucide-react";
+import { Lock, Unlock, Shield, AlertTriangle, CheckCircle2, Plus, Clock, DollarSign, Loader2, X } from "lucide-react";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "https://veritas-trust-ledger-production.up.railway.app";
-
-const MOCK_ESCROWS = [
-  {
-    id: "ESC-8821", job: "Full-Stack Next.js Developer — SaaS Platform", client: "TechVentures Inc.",
-    total: 10000, released: 4500, held: 5500, status: "active",
-    milestones: [
-      { id: 1, title: "Project Setup & Architecture", amount: 2000, status: "released", date: "Jun 1" },
-      { id: 2, title: "Core Feature Development", amount: 2500, status: "released", date: "Jun 14" },
-      { id: 3, title: "API Integration & Testing", amount: 3000, status: "held", date: "Jul 5" },
-      { id: 4, title: "Launch & Deployment", amount: 2500, status: "pending", date: "Jul 20" },
-    ],
-  },
-  {
-    id: "ESC-8720", job: "Brand Identity & UI/UX Design System", client: "GreenLeaf Studios",
-    total: 4500, released: 4500, held: 0, status: "completed",
-    milestones: [
-      { id: 1, title: "Research & Discovery", amount: 900, status: "released", date: "May 10" },
-      { id: 2, title: "Logo & Brand Mark", amount: 1800, status: "released", date: "May 22" },
-      { id: 3, title: "Design System Delivery", amount: 1800, status: "released", date: "Jun 3" },
-    ],
-  },
-  {
-    id: "ESC-8654", job: "Product Demo Video", client: "CloudSync AI",
-    total: 5000, released: 1500, held: 3500, status: "disputed",
-    milestones: [
-      { id: 1, title: "Script & Storyboard", amount: 1500, status: "released", date: "Jun 5" },
-      { id: 2, title: "Animation & Edit", amount: 2000, status: "disputed", date: "Jun 25" },
-      { id: 3, title: "Final Delivery", amount: 1500, status: "pending", date: "Jul 10" },
-    ],
-  },
+const ESCROWS = [
+  { id:"ESC-8821", job:"Full-Stack SaaS Dashboard",    client:"TechVentures Inc.", total:10000, released:4500, held:5500, status:"active",
+    milestones:[
+      {n:1,title:"Setup & Architecture",    amount:2000,status:"released",date:"Jun 1"},
+      {n:2,title:"Core Feature Development",amount:2500,status:"released",date:"Jun 14"},
+      {n:3,title:"API Integration & Testing",amount:3000,status:"held",   date:"Jul 5"},
+      {n:4,title:"Launch & Deployment",     amount:2500,status:"pending", date:"Jul 20"},
+    ]},
+  { id:"ESC-8654", job:"Product Demo Video",            client:"CloudSync AI",     total:5000, released:1500, held:3500, status:"disputed",
+    milestones:[
+      {n:1,title:"Script & Storyboard",    amount:1500,status:"released",date:"Jun 5"},
+      {n:2,title:"Animation & Edit",       amount:2000,status:"disputed",date:"Jun 25"},
+      {n:3,title:"Final Delivery",         amount:1500,status:"pending", date:"Jul 10"},
+    ]},
+  { id:"ESC-8720", job:"Brand Identity Design",        client:"GreenLeaf Studios",total:4500, released:4500, held:0, status:"completed",
+    milestones:[
+      {n:1,title:"Research & Discovery",  amount:900, status:"released",date:"May 10"},
+      {n:2,title:"Logo & Brand Mark",     amount:1800,status:"released",date:"May 22"},
+      {n:3,title:"Design System Delivery",amount:1800,status:"released",date:"Jun 3"},
+    ]},
 ];
 
-const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
-  active:    { label: "Active",    color: "text-cyan-400",   bg: "bg-cyan-500/10 border-cyan-500/20" },
-  completed: { label: "Completed", color: "text-green-400",  bg: "bg-green-500/10 border-green-500/20" },
-  disputed:  { label: "Disputed",  color: "text-red-400",    bg: "bg-red-500/10 border-red-500/20" },
-  held:      { label: "In Escrow", color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/20" },
-  released:  { label: "Released",  color: "text-green-400",  bg: "bg-green-500/10 border-green-500/20" },
-  pending:   { label: "Pending",   color: "text-white/40",   bg: "bg-white/5 border-white/10" },
+const MS: Record<string,{color:string;bg:string;label:string}> = {
+  released:  {color:"#00e676",bg:"rgba(0,200,83,0.1)",  label:"Released"},
+  held:      {color:"#f0c040",bg:"rgba(240,192,64,0.1)",label:"In Escrow"},
+  pending:   {color:"rgba(255,255,255,0.3)",bg:"rgba(255,255,255,0.04)",label:"Pending"},
+  disputed:  {color:"#ff5555",bg:"rgba(255,85,85,0.1)", label:"Disputed"},
 };
 
-export default function EscrowPage() {
-  const [escrows, setEscrows]   = useState(MOCK_ESCROWS);
-  const [selected, setSelected] = useState(MOCK_ESCROWS[0]);
-  const [releasing, setReleasing] = useState<number | null>(null);
-  const [tab, setTab]           = useState<"active"|"completed"|"disputed">("active");
+export default function EscrowV2Page() {
+  const [selected, setSel]     = useState(ESCROWS[0]);
+  const [releasing, setRel]    = useState<number|null>(null);
+  const [tab, setTab]          = useState<"active"|"completed"|"disputed">("active");
 
-  const filtered = escrows.filter(e =>
-    tab === "active" ? e.status === "active" :
-    tab === "completed" ? e.status === "completed" : e.status === "disputed"
-  );
+  const filtered = ESCROWS.filter(e=> tab==="active"?e.status==="active":tab==="completed"?e.status==="completed":e.status==="disputed");
+  const totalHeld     = ESCROWS.reduce((a,e)=>a+e.held,0);
+  const totalReleased = ESCROWS.reduce((a,e)=>a+e.released,0);
 
-  const totalHeld     = escrows.reduce((a, e) => a + e.held, 0);
-  const totalReleased = escrows.reduce((a, e) => a + e.released, 0);
-  const activeCount   = escrows.filter(e => e.status === "active").length;
-
-  function releaseMilestone(escrowId: string, milestoneId: number) {
-    setReleasing(milestoneId);
-    setTimeout(() => {
-      setEscrows(prev => prev.map(e => {
-        if (e.id !== escrowId) return e;
-        const ms = e.milestones.map(m => m.id === milestoneId ? { ...m, status: "released" } : m);
-        const released = ms.filter(m => m.status === "released").reduce((a, m) => a + m.amount, 0);
-        const held     = e.total - released;
-        return { ...e, milestones: ms, released, held };
-      }));
-      if (selected.id === escrowId) {
-        setSelected(prev => ({
-          ...prev,
-          milestones: prev.milestones.map(m => m.id === milestoneId ? { ...m, status: "released" } : m),
-        }));
-      }
-      setReleasing(null);
-    }, 1200);
+  function release(n:number) {
+    setRel(n);
+    setTimeout(()=>{
+      setSel(prev=>{
+        const ms = prev.milestones.map(m=>m.n===n?{...m,status:"released"}:m);
+        const released = ms.filter(m=>m.status==="released").reduce((a,m)=>a+m.amount,0);
+        return {...prev,milestones:ms,released,held:prev.total-released};
+      });
+      setRel(null);
+    },1200);
   }
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <TopBar />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+    <div style={{display:"flex",minHeight:"100vh",background:"#010812"}}>
+      <Sidebar/>
+      <div style={{flex:1,display:"flex",flexDirection:"column"}}>
+        <TopBar/>
+        <main style={{flex:1,overflowY:"auto",padding:24,color:"white"}}>
 
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <Vault className="text-yellow-400" size={28} />
-                <h1 className="text-3xl font-black gold-text">Escrow Vault</h1>
-              </div>
-              <p className="text-white/50">Blockchain-secured milestone payments — your money is always protected</p>
+          {/* Header */}
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24,flexWrap:"wrap",gap:12}}>
+            <div style={{display:"flex",alignItems:"center",gap:12}}>
+              <Lock size={28} color="#f0c040"/>
+              <h1 style={{fontSize:"1.8rem",fontWeight:900,margin:0}}>Escrow Vault</h1>
             </div>
-            <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 font-bold text-sm transition hover:bg-yellow-500/30">
-              <Plus size={18} /> New Escrow
+            <button style={{display:"flex",alignItems:"center",gap:7,padding:"11px 18px",background:"rgba(26,107,255,0.08)",border:"1px solid rgba(26,107,255,0.22)",borderRadius:10,color:"#4da6ff",fontWeight:600,fontSize:"0.85rem",cursor:"pointer"}}>
+              <Plus size={16}/> New Escrow
             </button>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:20}}>
             {[
-              { icon: Lock, label: "Held in Escrow", value: `$${totalHeld.toLocaleString()}`, color: "text-yellow-400" },
-              { icon: Unlock, label: "Total Released", value: `$${totalReleased.toLocaleString()}`, color: "text-green-400" },
-              { icon: Shield, label: "Active Contracts", value: activeCount, color: "text-cyan-400" },
-              { icon: AlertTriangle, label: "Disputes", value: escrows.filter(e => e.status === "disputed").length, color: "text-red-400" },
-            ].map((s, i) => {
-              const Icon = s.icon;
-              return (
-                <div key={i} className="glass-card rounded-2xl p-5">
-                  <Icon size={20} className={s.color} />
-                  <div className="text-2xl font-black mt-3 mb-1">{s.value}</div>
-                  <div className="text-xs text-white/50">{s.label}</div>
-                </div>
-              );
-            })}
+              {icon:<Lock size={20}/>,      label:"Held in Escrow",   value:`$${totalHeld.toLocaleString()}`,     color:"#f0c040"},
+              {icon:<Unlock size={20}/>,    label:"Total Released",   value:`$${totalReleased.toLocaleString()}`, color:"#00e676"},
+              {icon:<Shield size={20}/>,    label:"Active Contracts", value:ESCROWS.filter(e=>e.status==="active").length, color:"#4da6ff"},
+              {icon:<AlertTriangle size={20}/>,label:"Disputes",      value:ESCROWS.filter(e=>e.status==="disputed").length, color:"#ff5555"},
+            ].map((s,i)=>(
+              <div key={i} style={{background:"rgba(4,15,36,0.9)",border:"1px solid rgba(26,107,255,0.14)",borderRadius:14,padding:"18px 16px"}}>
+                <div style={{color:s.color,marginBottom:8}}>{s.icon}</div>
+                <div style={{fontSize:"1.7rem",fontWeight:900,color:s.color,lineHeight:1,marginBottom:4}}>{s.value}</div>
+                <div style={{fontSize:"0.7rem",color:"rgba(255,255,255,0.4)"}}>{s.label}</div>
+              </div>
+            ))}
           </div>
 
-          <div className="flex gap-6">
+          <div style={{display:"flex",gap:20}}>
             {/* List */}
-            <div className="w-80 flex-shrink-0 space-y-3">
-              <div className="flex gap-1 mb-4">
-                {(["active","completed","disputed"] as const).map(t => (
-                  <button key={t} onClick={() => setTab(t)} className={`flex-1 py-2 rounded-xl text-xs font-medium capitalize transition ${tab === t ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30" : "border border-white/10 text-white/40 hover:text-white"}`}>{t}</button>
+            <div style={{width:300,flexShrink:0,display:"flex",flexDirection:"column",gap:4}}>
+              <div style={{display:"flex",gap:4,marginBottom:8}}>
+                {(["active","completed","disputed"] as const).map(t=>(
+                  <button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:"7px",borderRadius:8,border:`1px solid ${tab===t?"rgba(26,107,255,0.4)":"rgba(26,107,255,0.1)"}`,background:tab===t?"rgba(26,107,255,0.12)":"transparent",color:tab===t?"#4da6ff":"rgba(255,255,255,0.4)",fontSize:"0.72rem",fontWeight:600,cursor:"pointer",textTransform:"capitalize"}}>{t}</button>
                 ))}
               </div>
-              {filtered.map(e => (
-                <button key={e.id} onClick={() => setSelected(e)} className={`w-full glass-card rounded-2xl p-4 text-left transition border ${selected.id === e.id ? "border-yellow-500/30 bg-yellow-500/5" : "border-white/5 hover:border-white/15"}`}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-white/30 font-mono">{e.id}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full border ${STATUS_META[e.status].bg} ${STATUS_META[e.status].color}`}>{STATUS_META[e.status].label}</span>
+              {filtered.map(e=>(
+                <button key={e.id} onClick={()=>setSel(e)} style={{padding:14,background:selected.id===e.id?"rgba(26,107,255,0.1)":"rgba(4,15,36,0.8)",border:`1px solid ${selected.id===e.id?"rgba(26,107,255,0.35)":"rgba(26,107,255,0.1)"}`,borderRadius:12,textAlign:"left",cursor:"pointer",transition:"all 0.15s"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                    <span style={{fontSize:"0.65rem",fontFamily:"monospace",color:"rgba(255,255,255,0.35)"}}>{e.id}</span>
+                    <span style={{fontSize:"0.62rem",padding:"2px 7px",background:MS[e.status].bg,borderRadius:5,color:MS[e.status].color,fontWeight:700}}>{MS[e.status].label}</span>
                   </div>
-                  <div className="font-semibold text-sm mb-1 line-clamp-1">{e.job}</div>
-                  <div className="text-xs text-white/40 mb-3">{e.client}</div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-white/40">Held: <span className="text-yellow-400 font-bold">${e.held.toLocaleString()}</span></span>
-                    <span className="text-white/40">Total: <span className="font-bold">${e.total.toLocaleString()}</span></span>
+                  <div style={{fontWeight:700,fontSize:"0.85rem",marginBottom:3,lineHeight:1.3}}>{e.job}</div>
+                  <div style={{fontSize:"0.68rem",color:"rgba(255,255,255,0.38)",marginBottom:8}}>{e.client}</div>
+                  <div style={{display:"flex",justifyContent:"space-between",fontSize:"0.72rem"}}>
+                    <span style={{color:"rgba(255,255,255,0.38)"}}>Held: <span style={{color:"#f0c040",fontWeight:700}}>${e.held.toLocaleString()}</span></span>
+                    <span style={{color:"rgba(255,255,255,0.38)"}}>Total: <span style={{fontWeight:700}}>${e.total.toLocaleString()}</span></span>
                   </div>
-                  <div className="mt-2 h-1.5 rounded-full bg-white/10 overflow-hidden">
-                    <div className="h-full bg-green-500 rounded-full" style={{ width: `${(e.released / e.total) * 100}%` }} />
+                  <div style={{marginTop:7,height:3,background:"rgba(26,107,255,0.08)",borderRadius:2,overflow:"hidden"}}>
+                    <div style={{width:`${(e.released/e.total)*100}%`,height:"100%",background:"#00e676",borderRadius:2}}/>
                   </div>
                 </button>
               ))}
             </div>
 
             {/* Detail */}
-            {selected && (
-              <div className="flex-1 glass-card rounded-3xl p-6">
-                <div className="flex items-start justify-between mb-6">
-                  <div>
-                    <div className="text-xs text-white/40 mb-1 font-mono">{selected.id}</div>
-                    <h2 className="font-bold text-xl mb-1">{selected.job}</h2>
-                    <div className="text-sm text-white/50">{selected.client}</div>
-                  </div>
-                  <span className={`text-sm px-3 py-1.5 rounded-xl border font-medium ${STATUS_META[selected.status].bg} ${STATUS_META[selected.status].color}`}>{STATUS_META[selected.status].label}</span>
+            <div style={{flex:1,background:"rgba(4,15,36,0.95)",border:"1px solid rgba(26,107,255,0.18)",borderRadius:18,padding:24}}>
+              <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:20}}>
+                <div>
+                  <div style={{fontSize:"0.65rem",fontFamily:"monospace",color:"rgba(255,255,255,0.35)",marginBottom:4}}>{selected.id}</div>
+                  <div style={{fontWeight:900,fontSize:"1.2rem",marginBottom:4}}>{selected.job}</div>
+                  <div style={{fontSize:"0.78rem",color:"rgba(255,255,255,0.45)"}}>{selected.client}</div>
                 </div>
+                <span style={{fontSize:"0.8rem",padding:"6px 14px",background:MS[selected.status].bg,borderRadius:9,color:MS[selected.status].color,fontWeight:700,border:`1px solid ${MS[selected.status].color}44`}}>{MS[selected.status].label}</span>
+              </div>
 
-                {/* Progress */}
-                <div className="mb-6 p-4 rounded-2xl bg-white/3 border border-white/10">
-                  <div className="flex justify-between text-sm mb-3">
-                    <span className="text-white/50">Total Contract Value</span>
-                    <span className="font-black text-xl gold-text">${selected.total.toLocaleString()}</span>
-                  </div>
-                  <div className="h-3 rounded-full bg-white/10 overflow-hidden mb-2">
-                    <div className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all" style={{ width: `${(selected.released / selected.total) * 100}%` }} />
-                  </div>
-                  <div className="flex justify-between text-xs text-white/40">
-                    <span>Released: <span className="text-green-400 font-bold">${selected.released.toLocaleString()}</span></span>
-                    <span>Held: <span className="text-yellow-400 font-bold">${selected.held.toLocaleString()}</span></span>
-                  </div>
+              {/* Balance */}
+              <div style={{padding:18,background:"rgba(26,107,255,0.04)",border:"1px solid rgba(26,107,255,0.12)",borderRadius:14,marginBottom:20}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+                  <span style={{color:"rgba(255,255,255,0.45)",fontSize:"0.85rem"}}>Total Contract Value</span>
+                  <span style={{fontWeight:900,fontSize:"1.4rem",color:"#00e676"}}>${selected.total.toLocaleString()}</span>
                 </div>
-
-                {/* Milestones */}
-                <h3 className="font-bold mb-4 text-sm uppercase tracking-wide text-white/50">Milestones</h3>
-                <div className="space-y-3">
-                  {selected.milestones.map(m => {
-                    const meta = STATUS_META[m.status];
-                    return (
-                      <div key={m.id} className={`flex items-center justify-between p-4 rounded-2xl border ${m.status === "disputed" ? "border-red-500/20 bg-red-500/5" : "border-white/8 bg-white/3"}`}>
-                        <div className="flex items-center gap-4">
-                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${meta.bg}`}>
-                            {m.status === "released" ? <CheckCircle2 size={16} className="text-green-400" /> :
-                             m.status === "disputed"  ? <AlertTriangle size={16} className="text-red-400" /> :
-                             m.status === "held"      ? <Lock size={16} className="text-yellow-400" /> :
-                             <Clock size={16} className="text-white/30" />}
-                          </div>
-                          <div>
-                            <div className="font-medium text-sm">{m.title}</div>
-                            <div className="text-xs text-white/40">Due {m.date}</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <div className="font-bold">${m.amount.toLocaleString()}</div>
-                            <span className={`text-xs ${meta.color}`}>{meta.label}</span>
-                          </div>
-                          {m.status === "held" && (
-                            <button onClick={() => releaseMilestone(selected.id, m.id)} disabled={releasing === m.id} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-green-500/20 border border-green-500/30 text-green-400 text-xs font-bold hover:bg-green-500/30 transition disabled:opacity-50">
-                              {releasing === m.id ? <Loader2 size={12} className="animate-spin" /> : <Unlock size={12} />}
-                              Release
-                            </button>
-                          )}
-                          {m.status === "disputed" && (
-                            <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-bold hover:bg-red-500/30 transition">
-                              <Scale size={12} /> Dispute
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div style={{height:10,background:"rgba(26,107,255,0.08)",borderRadius:5,overflow:"hidden",marginBottom:8}}>
+                  <div style={{width:`${(selected.released/selected.total)*100}%`,height:"100%",background:"linear-gradient(90deg,#00e676,#00c853)",borderRadius:5,transition:"width 0.8s"}}/>
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:"0.75rem"}}>
+                  <span style={{color:"#00e676"}}>Released: <strong>${selected.released.toLocaleString()}</strong></span>
+                  <span style={{color:"#f0c040"}}>Held: <strong>${selected.held.toLocaleString()}</strong></span>
                 </div>
               </div>
-            )}
+
+              {/* Milestones */}
+              <div style={{fontWeight:800,marginBottom:12,fontSize:"0.85rem",color:"rgba(255,255,255,0.6)",textTransform:"uppercase",letterSpacing:"0.08em"}}>Milestones</div>
+              <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                {selected.milestones.map(m=>{
+                  const ms = MS[m.status];
+                  return(
+                    <div key={m.n} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",background:m.status==="disputed"?"rgba(255,85,85,0.05)":"rgba(26,107,255,0.03)",border:`1px solid ${m.status==="disputed"?"rgba(255,85,85,0.2)":"rgba(26,107,255,0.1)"}`,borderRadius:12}}>
+                      <div style={{width:32,height:32,borderRadius:9,background:ms.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                        {m.status==="released"?<CheckCircle2 size={16} color="#00e676"/>:m.status==="disputed"?<AlertTriangle size={16} color="#ff5555"/>:m.status==="held"?<Lock size={16} color="#f0c040"/>:<Clock size={16} color="rgba(255,255,255,0.3)"/>}
+                      </div>
+                      <div style={{flex:1}}>
+                        <div style={{fontWeight:700,fontSize:"0.88rem",marginBottom:2}}>{m.title}</div>
+                        <div style={{fontSize:"0.67rem",color:"rgba(255,255,255,0.38)"}}>Due {m.date}</div>
+                      </div>
+                      <div style={{textAlign:"right",flexShrink:0}}>
+                        <div style={{fontWeight:800,fontSize:"0.95rem",marginBottom:2}}>${m.amount.toLocaleString()}</div>
+                        <span style={{fontSize:"0.62rem",color:ms.color,fontWeight:700}}>{ms.label}</span>
+                      </div>
+                      {m.status==="held"&&(
+                        <button onClick={()=>release(m.n)} disabled={releasing===m.n} style={{padding:"8px 14px",background:"rgba(0,200,83,0.12)",border:"1px solid rgba(0,200,83,0.3)",borderRadius:8,color:"#00e676",fontSize:"0.75rem",fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",gap:5,flexShrink:0}}>
+                          {releasing===m.n?<Loader2 size={13} style={{animation:"spin 1s linear infinite"}}/>:<Unlock size={13}/>} Release
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </main>
       </div>
