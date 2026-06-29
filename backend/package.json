@@ -1,9 +1,9 @@
 {
-   "name": "veritas-backend",
-   "version": "1.0.0",
-   "private": "true",
-   "description": "Veritas Trust Ledger API — Node/Express backend (Railway-ready)",
-   "main": "src/server.js",
+  "name": "veritas-backend",
+  "version": "1.0.0",
+  "private": "true",
+  "description": "Veritas Trust Ledger API — Node/Express backend (Railway-ready)",
+  "main": "src/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
@@ -17,8 +17,7 @@
     "worker:projection": "node src/workers/productionWorker.js",
     "worker:subscriber": "node src/workers/eventSubscriber.js",
     "worker:audit": "node src/workers/audit.js",
-    "worker:cobol": "node src/workers/cobolQueue.js",
-    "prisma:seed": "tsx prisma/seed.ts"
+    "worker:cobol": "node src/workers/cobolQueue.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1049.0",
@@ -62,6 +61,7 @@
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
+    "@types/compression": "^1.8.1",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
