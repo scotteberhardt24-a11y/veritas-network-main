@@ -72,7 +72,7 @@ export default function PassportPage() {
                 <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8}}>
                   <div style={{position:"relative"}}>
                     <div style={{width:90,height:90,borderRadius:16,border:"3px solid rgba(26,107,255,0.4)",background:"linear-gradient(135deg,#1a3a6b,#0d1f3d)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"2.8rem"}}>👷</div>
-                    <div style={{position:"absolute",-bottom:4,-right:-4,width:22,height:22,borderRadius:"50%",background:"#1a6bff",display:"flex",alignItems:"center",justifyContent:"center",border:"2px solid #010812"}}>
+                    <div style={{position:"absolute",bottom:4,right:-4,width:22,height:22,borderRadius:"50%",background:"#1a6bff",display:"flex",alignItems:"center",justifyContent:"center",border:"2px solid #010812"}}>
                       <CheckCircle2 size={13} color="white" fill="white"/>
                     </div>
                   </div>

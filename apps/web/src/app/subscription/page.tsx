@@ -128,7 +128,7 @@ export default function SubscriptionManagerPage() {
                 </div>
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
                   <div style={{fontWeight:800,color:"#00e676"}}>${inv.amount}</div>
-                  <span style={{fontSize:"0.65rem",padding:"3px 8px",background:"rgba(0,200,83,0.08)",border:"1px solid rgba(0,200,83,0.18)",borderRadius:5,color:"#00e676",fontWeight:700"}}>Paid</span>
+                  <span style={{fontSize:"0.65rem",padding:"3px 8px",background:"rgba(0,200,83,0.08)",border:"1px solid rgba(0,200,83,0.18)",borderRadius:5,color:"#00e676",fontWeight:700}}>Paid</span>
                   <button style={{padding:"5px 10px",background:"rgba(26,107,255,0.07)",border:"1px solid rgba(26,107,255,0.15)",borderRadius:7,color:"#4da6ff",fontSize:"0.7rem",cursor:"pointer",display:"flex",alignItems:"center",gap:4}}><Download size={11}/>PDF</button>
                 </div>
               </div>

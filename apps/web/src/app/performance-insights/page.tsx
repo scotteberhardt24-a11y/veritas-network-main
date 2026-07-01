@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Sidebar from "@/components/sidebar/Sidebar";
 import TopBar from "@/components/topbar/TopBar";
-import { TrendingUp, Star, Clock, DollarSign, Users, Zap, Award, BarChart3, Target, ThumbsUp } from "lucide-react";
+import { TrendingUp, Star, Clock, DollarSign, Users, Zap, Award, BarChart3, Target, ThumbsUp, Sparkles } from "lucide-react";
 
 const WEEKLY = [
   {week:"Apr W4",score:89,earn:8200,jobs:3,response:4.2},

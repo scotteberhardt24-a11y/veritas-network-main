@@ -32,6 +32,8 @@ const MS: Record<string,{color:string;bg:string;label:string}> = {
   held:      {color:"#f0c040",bg:"rgba(240,192,64,0.1)",label:"In Escrow"},
   pending:   {color:"rgba(255,255,255,0.3)",bg:"rgba(255,255,255,0.04)",label:"Pending"},
   disputed:  {color:"#ff5555",bg:"rgba(255,85,85,0.1)", label:"Disputed"},
+  active:    {color:"#4da6ff",bg:"rgba(26,107,255,0.1)",label:"Active"},
+  completed: {color:"#00e676",bg:"rgba(0,200,83,0.08)", label:"Completed"},
 };
 
 export default function EscrowV2Page() {

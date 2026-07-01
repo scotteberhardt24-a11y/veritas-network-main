@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Sidebar from "@/components/sidebar/Sidebar";
 import TopBar from "@/components/topbar/TopBar";
-import { Wallet, DollarSign, Lock, Unlock, ArrowDown, ArrowUp, TrendingUp, CreditCard, CheckCircle2, Loader2, X, AlertCircle } from "lucide-react";
+import { Wallet, DollarSign, Lock, Unlock, ArrowDown, ArrowUp, TrendingUp, CreditCard, CheckCircle2, Loader2, X, AlertCircle, Clock } from "lucide-react";
 
 const TXS = [
   {id:"TX-9821",desc:"Milestone 3 Released — TechVentures",    amount:+3500,  fee:-70,   net:+3430,  date:"Jun 28",type:"credit",status:"confirmed"},

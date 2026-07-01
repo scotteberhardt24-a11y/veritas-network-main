@@ -519,7 +519,4 @@ select.vt-input { cursor: pointer; }
    ═══════════════════════════════════════════ */
 
 /* Legacy support — map old classes to new system */
-.glass-card { @apply vt-card; }
-.gold-text   { @apply vt-gold-text; }
-.veritas-input { @apply vt-input; }
 .veritas-glow  { box-shadow: 0 0 30px rgba(26,107,255,0.3); }

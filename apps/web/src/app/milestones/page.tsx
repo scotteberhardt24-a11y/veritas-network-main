@@ -123,7 +123,7 @@ export default function MilestoneTrackerPage() {
                       <div style={{width:42,height:42,borderRadius:11,background:ss.bg,border:`1px solid ${ss.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:ss.color}}>{ss.icon}</div>
                       <div style={{flex:1}}>
                         <div style={{fontWeight:700,fontSize:"0.92rem",marginBottom:3}}>{m.title}</div>
-                        <div style={{fontSize:"0.7rem",color:"rgba(255,255,255,0.4)",display:"flex",gap:10"}}>
+                        <div style={{fontSize:"0.7rem",color:"rgba(255,255,255,0.4)",display:"flex",gap:10}}>
                           <span style={{display:"flex",alignItems:"center",gap:4}}><Calendar size={11}/>{m.date}</span>
                           {m.note&&<span>· {m.note}</span>}
                         </div>

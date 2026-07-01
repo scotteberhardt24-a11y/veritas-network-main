@@ -22,7 +22,7 @@ function Laurel({ side, scale=1 }: { side:"left"|"right"; scale?:number }) {
           key={i}
           cx={flip * (58 - i*5)} cy={95 + i*9}
           rx="10" ry="5.5"
-          transform={`rotate(${flip*(−52 + i*13)} ${flip*(58 - i*5)} ${95 + i*9})`}
+          transform={`rotate(${flip*(-52 + i*13)} ${flip*(58 - i*5)} ${95 + i*9})`}
           fill="#c9a227"
           opacity={0.9 - i*0.06}
         />

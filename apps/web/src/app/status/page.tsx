@@ -88,7 +88,7 @@ export default function PlatformStatusPage() {
                 <div key={s.id} style={{display:"flex",alignItems:"center",gap:14,padding:"13px 18px",borderBottom:i<SERVICES.length-1?"1px solid rgba(26,107,255,0.06)":"none"}}>
                   <div style={{color:m.color,flexShrink:0}}>{m.icon}</div>
                   <div style={{flex:1}}><div style={{fontWeight:600,fontSize:"0.88rem"}}>{s.name}</div><div style={{fontSize:"0.65rem",color:"rgba(255,255,255,0.38)"}}>{s.region}</div></div>
-                  <div style={{display:"flex",gap:16,fontSize:"0.75rem",flexShrink:0"}}>
+                  <div style={{display:"flex",gap:16,fontSize:"0.75rem",flexShrink:0}}>
                     <div style={{textAlign:"center"}}><div style={{fontWeight:700,color:"#00e676"}}>{s.uptime}</div><div style={{fontSize:"0.6rem",color:"rgba(255,255,255,0.35)"}}>uptime</div></div>
                     <div style={{textAlign:"center"}}><div style={{fontWeight:700,color:"rgba(255,255,255,0.6)"}}>{s.latency}</div><div style={{fontSize:"0.6rem",color:"rgba(255,255,255,0.35)"}}>latency</div></div>
                   </div>
