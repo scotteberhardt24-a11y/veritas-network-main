@@ -18,11 +18,6 @@ const PUBLIC_ROUTES = [
   "/waitlist", "/landing-v2", "/stats", "/badges",
   "/how-matching-works", "/escrow-simulator",
   "/mobile-preview", "/contact", "/help",
-  "/marketplace", "/marketplace-specialization",
-  "/job-board", "/jobs", "/leaderboard",
-  "/trust-leaderboard-v2", "/worker-search",
-  "/verify", "/onboarding", "/onboarding-v3",
-  "/onboarding-client", "/onboarding-progress",
 ];
 
 interface AuthContextType {
