@@ -105,7 +105,7 @@ export default function AgencyV2Page() {
                     <div style={{fontSize:"0.72rem",color:"rgba(255,255,255,0.45)"}}>{m.role} · {m.email}</div>
                   </div>
                   <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
-                    {[["Score",m.score,"#00e676"],["Jobs",m.jobs,"rgba(255,255,255,0.7)"],["Earned","$"+m.earn.toLocaleString(),"#00e676"]].map(([l,v,c],i)=>(
+                    {([["Score",m.score,"#00e676"],["Jobs",m.jobs,"rgba(255,255,255,0.7)"],["Earned","$"+m.earn.toLocaleString(),"#00e676"]] as [string, string|number, string][]).map(([l,v,c],i)=>(
                       <div key={i} style={{textAlign:"center"}}>
                         <div style={{fontWeight:800,color:c,fontSize:"0.9rem"}}>{v}</div>
                         <div style={{fontSize:"0.6rem",color:"rgba(255,255,255,0.35)"}}>{l}</div>
