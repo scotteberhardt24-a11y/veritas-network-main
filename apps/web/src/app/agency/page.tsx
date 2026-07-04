@@ -95,7 +95,7 @@ export default function AgencyV2Page() {
           {tab==="Team"&&(
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {MEMBERS.map(m=>(
-                <div key={m.id} style={{display:"flex",alignItems:"center",gap:14,padding:"16px 18px",background:"rgba(4,15,36,0.9)",border:"1px solid rgba(26,107,255,0.12)",borderRadius:14,flexWrap:"wrap",gap:12}}>
+                <div key={m.id} style={{display:"flex",alignItems:"center",padding:"16px 18px",background:"rgba(4,15,36,0.9)",border:"1px solid rgba(26,107,255,0.12)",borderRadius:14,flexWrap:"wrap",gap:12}}>
                   <div style={{position:"relative",flexShrink:0}}>
                     <div style={{width:46,height:46,borderRadius:12,background:"linear-gradient(135deg,#1a3a6b,#0d1f3d)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:"1rem"}}>{m.name[0]}</div>
                     <div style={{position:"absolute",bottom:-2,right:-2,width:12,height:12,borderRadius:"50%",background:m.status==="active"?"#00e676":"rgba(255,255,255,0.2)",border:"2px solid #010812"}}/>
