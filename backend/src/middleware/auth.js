@@ -1,39 +1,15 @@
 const jwt = require("jsonwebtoken");
+const JWT_SECRET = process.env.JWT_SECRET || "veritas_secret";
 
-/* =========================================================
-   AUTH MIDDLEWARE
-========================================================= */
-
-function authMiddleware(req, res, next) {
+module.exports = function auth(req, res, next) {
   const header = req.headers.authorization;
-
-  if (!header) {
-    return res.status(401).json({
-      error: "Authorization header missing",
-    });
-  }
-
+  if (!header || !header.startsWith("Bearer "))
+    return res.status(401).json({ success:false, message:"No token provided" });
   const token = header.split(" ")[1];
-
-  if (!token) {
-    return res.status(401).json({
-      error: "Token missing",
-    });
-  }
-
   try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "dev_secret"
-    );
-
-    req.user = decoded;
+    req.user = jwt.verify(token, JWT_SECRET);
     next();
-  } catch (err) {
-    return res.status(401).json({
-      error: "Invalid token",
-    });
+  } catch {
+    return res.status(401).json({ success:false, message:"Invalid or expired token — please log in again" });
   }
-}
-
-module.exports = authMiddleware;
+};

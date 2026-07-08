@@ -1,281 +1,157 @@
-// AI MATCHING ENGINE - Complete Working Implementation
-// backend/src/services/aiMatcher.js
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 
-const OpenAI = require('openai');
+const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+// ── Score a worker against a job using weighted signals ──
+function scoreWorker(worker, jobDetails) {
+  const signals = {};
 
-class AIMatchingEngine {
-  
-  // Main matching function - called when client posts a job
-  async matchWorkersToJob(jobDetails, availableWorkers, clientLocation) {
-    try {
-      
-      // 1. Calculate distance scores
-      const workersWithScores = availableWorkers.map(worker => {
-        const distance = this.calculateDistance(
-          clientLocation.lat, 
-          clientLocation.lng,
-          worker.lat,
-          worker.lng
-        );
-        
-        return {
-          ...worker,
-          distance,
-          distanceScore: this.calculateDistanceScore(distance, worker.travelRadius)
-        };
-      });
+  // Skill match (30%) — keyword overlap between job description and worker skills
+  const jobWords  = (jobDetails.title + " " + jobDetails.description).toLowerCase().split(/\W+/);
+  const skills    = (worker.skills || []).map(s => s.toLowerCase());
+  const matches   = skills.filter(s => jobWords.some(w => w.includes(s) || s.includes(w)));
+  signals.skillMatch = Math.min(100, (matches.length / Math.max(skills.length, 1)) * 100 + (matches.length > 0 ? 40 : 0));
 
-      // 2. Filter by availability
-      const availableNow = workersWithScores.filter(w => 
-        this.isAvailable(w, jobDetails.preferredDate)
-      );
+  // Trust score (20%) — normalized 0-100
+  signals.trustScore = Math.min(100, ((worker.trustScore || 50) / 1000) * 100);
 
-      // 3. Calculate match scores
-      const scored = availableNow.map(worker => ({
-        ...worker,
-        matchScore: this.calculateMatchScore(worker, jobDetails)
-      }));
+  // Past performance (20%) — based on completed jobs and response time
+  const jobs = worker.completedJobs || 0;
+  signals.pastPerformance = Math.min(100, jobs > 100 ? 95 : jobs > 50 ? 85 : jobs > 20 ? 70 : jobs > 5 ? 55 : 35);
 
-      // 4. Sort by score
-      scored.sort((a, b) => b.matchScore - a.matchScore);
-
-      // 5. Get top 3 with diversity
-      const top3 = this.selectDiverseTop3(scored, jobDetails.budget);
-
-      // 6. Generate AI explanations
-      const withExplanations = await Promise.all(
-        top3.map(w => this.generateMatchExplanation(w, jobDetails))
-      );
-
-      return withExplanations;
-
-    } catch (error) {
-      console.error('Matching error:', error);
-      throw error;
-    }
+  // Rate compatibility (15%) — how well rate fits budget
+  const budget = parseBudget(jobDetails.budget);
+  const rate   = worker.hourlyRate || 75;
+  if (budget > 0) {
+    const budgetRate = budget / 160; // assume 160 hrs/month
+    const diff = Math.abs(rate - budgetRate) / budgetRate;
+    signals.rateCompatibility = Math.max(0, 100 - diff * 100);
+  } else {
+    signals.rateCompatibility = 75;
   }
 
-  // Calculate distance between two coordinates (Haversine formula)
-  calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 3959; // Earth radius in miles
-    const dLat = this.toRad(lat2 - lat1);
-    const dLon = this.toRad(lon2 - lon1);
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
+  // Availability (10%)
+  signals.availability = worker.availability ? 100 : 0;
+
+  // Location (5%) — always 70 for now (remote-first)
+  signals.location = 70;
+
+  // Weighted total
+  const total =
+    signals.skillMatch      * 0.30 +
+    signals.trustScore      * 0.20 +
+    signals.pastPerformance * 0.20 +
+    signals.rateCompatibility * 0.15 +
+    signals.availability    * 0.10 +
+    signals.location        * 0.05;
+
+  return { score: Math.round(total), signals };
+}
+
+function parseBudget(budget) {
+  if (!budget) return 0;
+  const s = String(budget).replace(/[,$]/g, "");
+  if (s.includes("–") || s.includes("-")) {
+    const parts = s.split(/[–-]/);
+    return (parseFloat(parts[0]) + parseFloat(parts[1])) / 2;
   }
+  return parseFloat(s) || 0;
+}
 
-  toRad(degrees) {
-    return degrees * (Math.PI / 180);
-  }
+// ── Use Claude to rank and explain the top workers ──
+async function rankWithClaude(jobDetails, candidates) {
+  if (!ANTHROPIC_KEY || candidates.length === 0) return candidates.slice(0, 3);
 
-  // Score based on distance vs worker's travel radius
-  calculateDistanceScore(distance, travelRadius) {
-    if (distance > travelRadius) return 0;
-    return Math.max(0, 1 - (distance / travelRadius));
-  }
+  try {
+    const prompt = `You are Veritas AI, an expert job-worker matching system.
 
-  // Check if worker is available on preferred date
-  isAvailable(worker, preferredDate) {
-    // Simplified - in real version check calendar
-    return true;
-  }
+Job Details:
+- Title: ${jobDetails.title}
+- Description: ${jobDetails.description}
+- Budget: ${jobDetails.budget || "Not specified"}
+- Timeline: ${jobDetails.timeline || "Flexible"}
 
-  // Calculate overall match score (0-100)
-  calculateMatchScore(worker, job) {
-    let score = 0;
+Top Candidates (pre-scored):
+${candidates.slice(0, 8).map((c, i) => `
+${i+1}. ${c.name || c.email} (@${c.username})
+   - Skills: ${(c.skills || []).join(", ") || "Not specified"}
+   - Trust Score: ${c.trustScore}/1000
+   - Rate: $${c.hourlyRate}/hr
+   - Jobs Completed: ${c.completedJobs}
+   - Pre-score: ${c._score}
+`).join("")}
 
-    // Distance (30 points)
-    score += worker.distanceScore * 30;
+Select the TOP 3 workers best suited for this job. Consider skill alignment, trust, rate fit, and experience.
 
-    // Skills match (25 points)
-    const hasSkill = worker.services?.includes(job.category);
-    score += hasSkill ? 25 : 0;
+Respond in JSON only — no markdown, no explanation:
+{"rankings":[{"rank":1,"username":"...","matchScore":99,"reason":"...","strengths":["...","..."]},{"rank":2,"username":"...","matchScore":97,"reason":"...","strengths":["...","..."]},{"rank":3,"username":"...","matchScore":94,"reason":"...","strengths":["...","..."]}]}`;
 
-    // Experience (15 points)
-    const yearsInCategory = worker.experienceYears?.[job.category] || 0;
-    score += Math.min(yearsInCategory * 3, 15);
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": ANTHROPIC_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        messages: [{ role:"user", content: prompt }],
+      }),
+    });
 
-    // Trust score (15 points)
-    score += (worker.truscore / 1000) * 15;
+    const data  = await res.json();
+    const text  = data.content?.[0]?.text || "";
+    const clean = text.replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(clean);
 
-    // Rating (10 points)
-    score += (worker.rating / 5) * 10;
-
-    // Price match (5 points)
-    const workerRate = worker.rates?.[job.category] || worker.baseRate;
-    const priceFit = this.calculatePriceFit(workerRate, job.budget);
-    score += priceFit * 5;
-
-    return Math.round(score);
-  }
-
-  calculatePriceFit(workerRate, jobBudget) {
-    if (!jobBudget?.min || !jobBudget?.max) return 0.5;
-    const avgBudget = (jobBudget.min + jobBudget.max) / 2;
-    const diff = Math.abs(workerRate - avgBudget);
-    return Math.max(0, 1 - (diff / avgBudget));
-  }
-
-  // Select top 3 with diversity (not just highest scores)
-  selectDiverseTop3(workers, budget) {
-    if (workers.length <= 3) return workers.slice(0, 3);
-
-    const avgBudget = budget?.max || 100;
-    const top3 = [];
-
-    // 1. Best overall match
-    top3.push(workers[0]);
-
-    // 2. Budget option (if different from #1)
-    const budgetOption = workers.find(w => 
-      w.baseRate <= avgBudget * 0.9 && 
-      w.worker_id !== top3[0].worker_id
-    );
-    if (budgetOption) top3.push(budgetOption);
-
-    // 3. Premium option (if different from others)
-    const premiumOption = workers.find(w => 
-      w.rating >= 4.8 && 
-      !top3.find(t => t.worker_id === w.worker_id)
-    );
-    if (premiumOption) top3.push(premiumOption);
-
-    // Fill remaining slots if needed
-    while (top3.length < 3 && top3.length < workers.length) {
-      const next = workers.find(w => 
-        !top3.find(t => t.worker_id === w.worker_id)
-      );
-      if (next) top3.push(next);
-    }
-
-    return top3;
-  }
-
-  // Generate AI explanation for match
-  async generateMatchExplanation(worker, job) {
-    try {
-      const prompt = `You're explaining why this worker matches a job posting.
-
-Worker:
-- Name: ${worker.name}
-- Experience: ${worker.experienceYears?.[job.category] || 0} years in ${job.category}
-- Rating: ${worker.rating}★ from ${worker.reviewCount} reviews
-- TruScore: ${worker.truscore}
-- Distance: ${worker.distance.toFixed(1)} miles away
-- Rate: $${worker.baseRate}/hr
-
-Job:
-- Category: ${job.category}
-- Budget: $${job.budget?.min}-$${job.budget?.max}
-- Urgency: ${job.urgency}
-
-Write a single, enthusiastic sentence (max 15 words) explaining why this is a great match. Focus on the strongest selling point.`;
-
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 50,
-        temperature: 0.7
-      });
-
-      const explanation = completion.choices[0].message.content.trim();
-
-      return {
-        ...worker,
-        matchReason: explanation,
-        highlights: this.generateHighlights(worker, job),
-        estimatedTotal: this.estimateJobCost(worker, job)
-      };
-
-    } catch (error) {
-      console.error('AI explanation error:', error);
-      return {
-        ...worker,
-        matchReason: `${worker.name} has strong experience and excellent ratings.`,
-        highlights: this.generateHighlights(worker, job),
-        estimatedTotal: this.estimateJobCost(worker, job)
-      };
-    }
-  }
-
-  // Generate highlight bullets
-  generateHighlights(worker, job) {
-    const highlights = [];
-
-    const years = worker.experienceYears?.[job.category];
-    if (years) {
-      highlights.push(`✓ ${years} years experience in ${job.category}`);
-    }
-
-    if (worker.rating >= 4.5) {
-      highlights.push(`✓ ${worker.rating}★ rating from ${worker.reviewCount} jobs`);
-    }
-
-    if (worker.distance <= 5) {
-      highlights.push(`✓ Only ${worker.distance.toFixed(1)} miles away`);
-    }
-
-    if (worker.responseTime <= 60) {
-      highlights.push(`✓ Responds within 1 hour`);
-    }
-
-    if (worker.verified) {
-      highlights.push(`✓ Background checked & verified`);
-    }
-
-    return highlights;
-  }
-
-  // Estimate total job cost
-  estimateJobCost(worker, job) {
-    const hourlyRate = worker.baseRate;
-    const estimatedHours = job.estimatedDuration || 2;
-    const labor = hourlyRate * estimatedHours;
-    const materials = labor * 0.15; // Rough estimate
-    const total = labor + materials;
-
-    return {
-      labor: Math.round(labor),
-      materials: Math.round(materials),
-      total: Math.round(total),
-      explanation: `Based on ${estimatedHours} hours of work`
-    };
-  }
-
-  // Get regional rate data
-  async getRegionalRates(service, zipCode) {
-    const pool = require('../db/db');
-    
-    const result = await pool.query(
-      `SELECT rate_data FROM regional_rates 
-       WHERE service_category = $1 AND zip_code = $2`,
-      [service, zipCode]
-    );
-
-    if (result.rows.length > 0) {
-      return result.rows[0].rate_data;
-    }
-
-    // Default fallback rates by category
-    const defaults = {
-      'Plumbing': { min: 65, max: 120, median: 85 },
-      'Electrical': { min: 75, max: 150, median: 95 },
-      'HVAC': { min: 80, max: 140, median: 100 },
-      'Carpentry': { min: 50, max: 100, median: 70 },
-      'Painting': { min: 40, max: 80, median: 55 },
-      'Cleaning': { min: 30, max: 60, median: 40 }
-    };
-
-    return defaults[service] || { min: 50, max: 100, median: 70 };
+    // Map Claude rankings back to full worker objects
+    return parsed.rankings.map((r, i) => {
+      const worker = candidates.find(c => c.username === r.username) || candidates[i];
+      return { ...worker, _matchScore: r.matchScore, _reason: r.reason, _strengths: r.strengths, _rank: r.rank };
+    });
+  } catch (err) {
+    console.error("[AI] Claude ranking failed, using score fallback:", err.message);
+    return candidates.slice(0, 3).map((w, i) => ({ ...w, _matchScore: w._score, _rank: i+1, _reason:"Strong skill and trust match", _strengths:w.skills?.slice(0,2) || [] }));
   }
 }
 
-module.exports = new AIMatchingEngine();
+// ── MAIN: Match workers to job ──
+exports.matchWorkersToJob = async (jobDetails) => {
+  // Pull available workers from DB
+  const workers = await prisma.user.findMany({
+    where: { role:"WORKER", availability:true },
+    select: {
+      id:true, name:true, email:true, username:true,
+      skills:true, trustScore:true, hourlyRate:true,
+      completedJobs:true, availability:true, responseTime:true,
+    },
+    take: 50,
+    orderBy: { trustScore: "desc" },
+  });
+
+  if (workers.length === 0) {
+    // Return demo workers if DB is empty
+    return getDemoMatches(jobDetails);
+  }
+
+  // Score all workers
+  const scored = workers.map(w => {
+    const { score, signals } = scoreWorker(w, jobDetails);
+    return { ...w, _score: score, _signals: signals };
+  }).sort((a, b) => b._score - a._score);
+
+  // Rank top 8 with Claude
+  const top3 = await rankWithClaude(jobDetails, scored);
+  return top3;
+};
+
+// ── Demo matches when DB is empty ──
+function getDemoMatches(jobDetails) {
+  return [
+    { id:"demo1", name:"Alex Chen",    username:"alexchen.dev",  skills:["React","TypeScript","Next.js"], trustScore:990, hourlyRate:150, completedJobs:247, _matchScore:99, _rank:1, _reason:"Perfect skill alignment with extensive full-stack experience", _strengths:["React/TypeScript expert","247 completed jobs"] },
+    { id:"demo2", name:"Priya Sharma", username:"priyadev",      skills:["Node.js","AWS","PostgreSQL"],   trustScore:960, hourlyRate:140, completedJobs:156, _matchScore:97, _rank:2, _reason:"Strong backend match with excellent trust score",          _strengths:["Backend architecture","Cloud infrastructure"] },
+    { id:"demo3", name:"Marcus J.",    username:"mjohnson.dev",  skills:["React","Node.js","MongoDB"],    trustScore:910, hourlyRate:135, completedJobs:198, _matchScore:94, _rank:3, _reason:"Solid full-stack developer with competitive rate",           _strengths:["Full-stack generalist","Fast delivery track record"] },
+  ];
+}

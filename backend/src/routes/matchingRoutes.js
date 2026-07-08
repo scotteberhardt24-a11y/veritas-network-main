@@ -1,39 +1,29 @@
-const express = require('express');
-const router = express.Router();
-const aiMatcher = require('../services/aiMatcher');
-const auth = require('../middleware/auth');
+const express = require("express");
+const router  = express.Router();
+const auth    = require("../middleware/auth");
+const aiMatcher = require("../services/aiMatcher");
 
-router.post('/match-workers', auth, async (req, res) => {
+// POST /api/matching/match-workers
+// Body: { title, description, budget, timeline }
+router.post("/match-workers", auth, async (req, res) => {
   try {
-    const { jobDetails, location } = req.body;
-    const pool = require('../db/db');
-    const result = await pool.query('SELECT * FROM workers WHERE status = $1 AND email_verified = true', ['active']);
-    const matches = await aiMatcher.matchWorkersToJob(jobDetails, result.rows, location);
-    res.json({ status: 'ok', matches });
-  } catch (error) {
-    res.status(500).json({ status: 'error', error: error.message });
+    const { title, description, budget, timeline } = req.body;
+    if (!title || !description)
+      return res.status(400).json({ success:false, message:"Job title and description are required" });
+
+    const jobDetails = { title, description, budget, timeline };
+    const matches    = await aiMatcher.matchWorkersToJob(jobDetails);
+
+    return res.json({ success:true, matches, count: matches.length, analyzedAt: new Date().toISOString() });
+  } catch (err) {
+    console.error("[MATCH] Error:", err);
+    return res.status(500).json({ success:false, message:"Matching failed — please try again." });
   }
 });
 
-router.post('/analyze-job', auth, async (req, res) => {
-  try {
-    const { description } = req.body;
-    const categories = {
-      'leak': 'Plumbing', 'faucet': 'Plumbing', 'pipe': 'Plumbing',
-      'electrical': 'Electrical', 'wiring': 'Electrical',
-      'hvac': 'HVAC', 'ac': 'HVAC', 'paint': 'Painting'
-    };
-    let category = 'General';
-    for (const [keyword, cat] of Object.entries(categories)) {
-      if (description.toLowerCase().includes(keyword)) {
-        category = cat;
-        break;
-      }
-    }
-    res.json({ status: 'ok', category, estimatedCost: { min: 100, max: 300 } });
-  } catch (error) {
-    res.status(500).json({ status: 'error', error: error.message });
-  }
+// GET /api/matching/status — health check
+router.get("/status", (req, res) => {
+  res.json({ success:true, status:"AI matching engine online", model:"claude-sonnet-4-6" });
 });
 
 module.exports = router;
