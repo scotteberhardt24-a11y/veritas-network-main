@@ -7,7 +7,7 @@ import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 
 import { env } from "./config/env.js";
-import { errorMiddleware } from "./middleware/error.middleware.js";
+
 
 const app = express();
 
@@ -45,6 +45,6 @@ app.get("/health", (req, res) => {
   });
 });
 
-app.use(errorMiddleware);
+
 
 export default app;
