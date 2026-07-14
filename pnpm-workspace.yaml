@@ -5,6 +5,7 @@ packages:
 allowBuilds:
   '@prisma/client': false
   '@prisma/engines': false
+  '@railway/cli': set this to true or false
   bcrypt: false
   esbuild: false
   msgpackr-extract: false

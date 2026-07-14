@@ -1,5 +1,9 @@
 [phases.install]
-cmds = ["npm install -g pnpm@9", "pnpm install"]
+cmds = [
+  "corepack enable",
+  "corepack prepare pnpm@9 --activate",
+  "pnpm install"
+]
 
 [phases.build]
 cmds = ["pnpm build"]
