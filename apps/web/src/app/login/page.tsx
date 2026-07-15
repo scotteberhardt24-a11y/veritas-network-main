@@ -37,7 +37,8 @@ export default function LoginPage() {
     setLoading(true); setError("");
     try {
       await login(email, password);
-      router.replace(redirect);
+      // Force hard redirect to dashboard
+      window.location.href = redirect || "/dashboard";
     } catch (err: any) {
       setError(err.message || "Login failed — please try again");
       setLoading(false);
