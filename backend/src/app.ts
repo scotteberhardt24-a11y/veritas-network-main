@@ -7,6 +7,15 @@ import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 
 import { env } from "./config/env.js";
+import authRoutes from "./routes/authRoutes.js";
+import healthRoutes from "./routes/healthRoutes.js";
+import escrowRoutes from "./routes/escrowRoutes.js";
+import messageRoutes from "./routes/messageRoutes.js";
+import jobRoutes from "./routes/jobRoutes.js";
+import trustRoutes from "./routes/trustRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
+import matchingRoutes from "./routes/matchingRoutes.js";
+
 
 
 const app = express();
@@ -46,5 +55,19 @@ app.get("/health", (req, res) => {
 });
 
 
+
+
+app.use("/api/health", healthRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/escrow", escrowRoutes);
+app.use("/api/messages", messageRoutes);
+app.use("/api/jobs", jobRoutes);
+app.use("/api/trust", trustRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/matching", matchingRoutes);
+
+app.get("/", (req, res) => {
+  res.json({ status: "ok", name: "Veritas API v1" });
+});
 
 export default app;
