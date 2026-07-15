@@ -63,9 +63,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(me);
         setStoredUser(me);
       } catch {
-        // Token invalid — clear and redirect if on protected route
-        clearToken();
-        setUser(null);
+        // getMe failed but token might still be valid (network issue)
+        // Keep the stored user if we have one
+        if (!stored) {
+          clearToken();
+          setUser(null);
+        }
       }
       setLoading(false);
     }
