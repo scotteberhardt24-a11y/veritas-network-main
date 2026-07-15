@@ -100,7 +100,7 @@ exports.register = async (req, res) => {
     const userRole     = role.toUpperCase() === "CLIENT" ? "CLIENT" : "WORKER";
 
     const user = await prisma.user.create({
-      data: { name, email, username, passwordHash, role: userRole, trustScore: 50 },
+      data: { email, username, passwordHash, role: userRole, trustScore: 50 },
     });
 
     // Create wallet
