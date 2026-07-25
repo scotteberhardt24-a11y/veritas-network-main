@@ -50,6 +50,8 @@ const passportRoutes = require("./routes/passportRoutes");
 app.use("/api/passport", passportRoutes);
 const passportRoutes = require("./routes/passportRoutes");
 app.use("/api/passport", passportRoutes);
+const passportRoutes = require("./routes/passportRoutes");
+app.use("/api/passport", passportRoutes);
 
 /* =========================================================
    ROOT
