@@ -19,11 +19,11 @@ const adminRoutes = require("./routes/adminRoutes");
 const healthRoutes = require("./routes/healthRoutes");
 
 const app = express();
-
+const passportRoutes = require("./routes/passportRoutes");
 /* =========================================================
    GLOBAL MIDDLEWARE
 ========================================================= */
-
+app.use("/api/passport", passportRoutes);
 app.use(helmet());
 app.use(cors({ origin: process.env.CORS_ORIGIN || "*", credentials: true 
 }));
@@ -46,6 +46,10 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/trust", trustRoutes);
 app.use("/api/admin", adminRoutes);
+const passportRoutes = require("./routes/passportRoutes");
+app.use("/api/passport", passportRoutes);
+const passportRoutes = require("./routes/passportRoutes");
+app.use("/api/passport", passportRoutes);
 
 /* =========================================================
    ROOT

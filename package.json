@@ -1,17 +1,21 @@
 {
-  "name": "veritas-network-main",
-  "private": true,
+  "name": "veritas-contracts",
   "version": "1.0.0",
   "scripts": {
-    "dev": "pnpm --filter veritas-web dev",
-    "build": "pnpm --filter veritas-web build",
-    "lint": "pnpm --filter veritas-web lint"
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:testnet": "hardhat run scripts/deploy.ts --network amoy",
+    "deploy:mainnet": "hardhat run scripts/deploy.ts --network polygon",
+    "verify": "hardhat verify --network polygon"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.22.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.0",
+    "@types/node": "^20.0.0"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.104.1",
-    "@railway/cli": "^5.26.0",
-    "next": "^16.2.9",
-    "next.js": "^1.0.3",
-    "socket.io-client": "^4.8.3"
+    "@openzeppelin/contracts": "^5.0.0"
   }
 }
