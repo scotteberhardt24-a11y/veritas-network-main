@@ -388,3 +388,15 @@ export function TopTrustScoreBadge({ size = 100 }: BadgeProps) {
     </Shield>
   );
 }
+
+
+// ── ALL_BADGES export (used by passport page) ──
+export const ALL_BADGES = [
+  { id:"new-member",    Component:NewMemberBadge,     name:"New Member",       desc:"Joined Veritas Network",                    pts:50  },
+  { id:"first-escrow",  Component:FirstEscrowBadge,   name:"First Escrow",     desc:"Completed first escrow contract",           pts:25  },
+  { id:"jobs-50",       Component:Jobs50Badge,         name:"50 Jobs",          desc:"Completed 50 jobs with 90%+ success rate",  pts:100 },
+  { id:"jobs-100",      Component:Jobs100Badge,        name:"100 Jobs",         desc:"Top 8% milestone — 100 completed jobs",     pts:200 },
+  { id:"escrow-master", Component:EscrowMasterBadge,   name:"Escrow Master",    desc:"50+ escrow contracts at 98%+ release rate", pts:150 },
+  { id:"year-verified", Component:YearVerifiedBadge,   name:"1 Year Verified",  desc:"Remained a verified member for 1 year",     pts:75  },
+  { id:"top-trust",     Component:TopTrustScoreBadge,  name:"Top Trust Score",  desc:"Trust Score in the global top 10%",         pts:200 },
+];
