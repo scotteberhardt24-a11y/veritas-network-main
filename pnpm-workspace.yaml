@@ -8,9 +8,9 @@ allowBuilds:
   '@railway/cli': true
   bcrypt: false
   esbuild: false
-  keccak: set this to true or false
+  keccak: false
   msgpackr-extract: false
   prisma: false
-  secp256k1: set this to true or false
+  secp256k1: false
   sharp: false
   unrs-resolver: false
