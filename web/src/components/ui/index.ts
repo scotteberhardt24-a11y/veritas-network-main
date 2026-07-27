@@ -3,7 +3,7 @@
 import React from "react";
 
 export function Button({ children, onClick, disabled, className, style, type="button" }: any) {
-  return <button >={type} onClick={onClick} disabled={disabled} className={className} style={{ padding:"10px 20px", background:"#1a6bff", border:"none", borderRadius:8, color:"white", fontWeight:700, cursor:disabled?"not-allowed":"pointer", opacity:disabled?0.5:1, ...style }}>{children}</button>;
+  return <button type={type} onClick={onClick} disabled={disabled} className={className} style={{ padding:"10px 20px", background:"#1a6bff", border:"none", borderRadius:8, color:"white", fontWeight:700, cursor:disabled?"not-allowed":"pointer", opacity:disabled?0.5:1, ...style }}>{children}</button>;
 }
 
 export function LoadingSpinner({ size=24 }: any) {
