@@ -211,7 +211,7 @@ export default function AIMatchingV2Page() {
                     </div>
 
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14}}>
-                      {[["AI Match",`${w.match}%`,"#f0c040"],["Trust Score",w.score,"#00e676"],["Rate",`$${w.rate}/hr`,"rgba(255,255,255,0.7)"],["Jobs Done",w.jobs,"rgba(255,255,255,0.7)"]].map(([l,v,c],i)=>(
+                      {([["AI Match",`${w.match}%`,"#f0c040"],["Trust Score",String(w.score),"#00e676"],["Rate",`$${w.rate}/hr`,"rgba(255,255,255,0.7)"],["Jobs Done",String(w.jobs),"rgba(255,255,255,0.7)"]] as [string,string,string][]).map(([l,v,c],i)=>(
                         <div key={i} style={{padding:"8px",background:"rgba(26,107,255,0.05)",border:"1px solid rgba(26,107,255,0.1)",borderRadius:8,textAlign:"center"}}>
                           <div style={{fontWeight:800,color:c,fontSize:"0.88rem",lineHeight:1,marginBottom:2}}>{v}</div>
                           <div style={{fontSize:"0.58rem",color:"rgba(255,255,255,0.35)"}}>{l}</div>
