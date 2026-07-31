@@ -82,12 +82,7 @@ export default function AuthPage() {
 
     setLoading(true);
 
-    const res = await apiRegister(
-      signupName,
-      signupEmail,
-      signupPassword,
-      signupRole
-    );
+    const res = await apiRegister(signupName, signupEmail, signupPassword);
 
     if (res.status === 'ok') {
       // Auto login after signup
