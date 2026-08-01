@@ -48,7 +48,7 @@ export default function GovernancePage() {
               <div style={{display:"flex",gap:12}}>
                 {[["Active Votes","2","#f0c040"],["Total Voters","12,847","#4da6ff"],["Proposals Passed","2","#00e676"]].map(([l,v,c],i)=>(
                   <div key={i} style={{padding:"10px 16px",background:"rgba(26,107,255,0.08)",border:"1px solid rgba(26,107,255,0.15)",borderRadius:10,textAlign:"center"}}>
-                    <div style={{fontSize:"1.4rem",fontWeight:900,color:c,lineHeight:1,marginBottom:2}}>{v}</div>
+                    <div style={{fontSize:"1.4rem",fontWeight:900,color:c as string,lineHeight:1,marginBottom:2}}>{v}</div>
                     <div style={{fontSize:"0.62rem",color:"rgba(255,255,255,0.4)"}}>{l}</div>
                   </div>
                 ))}
@@ -135,7 +135,7 @@ export default function GovernancePage() {
                   </div>
                   {[["Trust Score",j.score,"#00e676"],["Accuracy",j.accuracy,"#f0c040"],["Cases",j.cases,"#4da6ff"]].map(([l,v,c],i)=>(
                     <div key={i} style={{textAlign:"center",minWidth:60}}>
-                      <div style={{fontWeight:800,color:c,fontSize:"0.9rem"}}>{v}</div>
+                      <div style={{fontWeight:800,color:c as string,fontSize:"0.9rem"}}>{v}</div>
                       <div style={{fontSize:"0.6rem",color:"rgba(255,255,255,0.35)"}}>{l}</div>
                     </div>
                   ))}
