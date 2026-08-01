@@ -58,7 +58,7 @@ export default function DashboardPage() {
                   <span style={{ fontSize:"0.62rem", color:"rgba(255,255,255,0.35)" }}>Since Jan 2026</span>
                 </div>
                 <h1 style={{ fontSize:"1.9rem", fontWeight:900, margin:"0 0 6px", lineHeight:1.2 }}>
-                  Welcome back, {user?.username || "Scott"} 👋
+                  Welcome back, {user?.email?.split('@')[0] || "Scott"} 👋
                 </h1>
                 <p style={{ color:"rgba(255,255,255,0.5)", margin:"0 0 16px", fontSize:"0.88rem", lineHeight:1.6 }}>
                   Your Trust Score is in the top 6% globally. You have 3 active jobs and 2 pending matches.

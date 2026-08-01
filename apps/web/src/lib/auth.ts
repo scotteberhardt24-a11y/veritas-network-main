@@ -10,6 +10,7 @@ export interface VeritasUser {
   id:    string;
   name?: string;
   email: string;
+  username?: string;
   role?: string;
   trustScore?: number;
   avatar?: string;
