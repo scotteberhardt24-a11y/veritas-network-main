@@ -28,8 +28,8 @@ export default function PassportPage() {
 
   function copyLink(){ navigator.clipboard.writeText(profileUrl); setCopied(true); setTimeout(()=>setCopied(false),2000); }
 
-  const earned = ALL_BADGES.filter(b=>b.earned);
-  const locked = ALL_BADGES.filter(b=>!b.earned);
+  const earned = ALL_BADGES.filter(b=>b.pts);
+  const locked = ALL_BADGES.filter(b=>!b.pts);
 
   const BadgeComponents: Record<string, React.ComponentType<{size?:number}>> = {
     verified: VeritasVerifiedBadge, new_member: NewMemberBadge, jobs_50: Jobs50Badge,
