@@ -27,7 +27,7 @@ export default function SearchV2Page() {
   const results = ALL.filter(r=>{
     const matchTab = tab==="all"||(tab==="workers"&&r.type==="worker")||(tab==="jobs"&&r.type==="job");
     const mq = q.toLowerCase();
-    const matchQ = !q||("name" in r?r.name+" "+r.title:r.title+" "+(r.client||"")).toLowerCase().includes(mq)||("skills" in r?r.skills.some(s=>s.toLowerCase().includes(mq)):false);
+    const matchQ = !q||("name" in r?r.name+" "+r.title:r.title+" "+(r.client||"")).toLowerCase().includes(mq)||("skills" in r?r.skills?.some(s=>s.toLowerCase().includes(mq)):false);
     return matchTab&&matchQ;
   });
 
