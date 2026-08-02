@@ -16,7 +16,7 @@ const WORKER = {
     {title:"E-commerce Rebuild",   value:"$12,000",client:"TechVentures",  rating:5},
     {title:"Crypto Dashboard",     value:"$8,500", client:"CryptoEdge",    rating:5},
   ],
-  reviews:[
+  testimonials:[
     {author:"Brian Walsh",company:"TechVentures",rating:5,date:"Jun 2026",text:"Scott delivered exceptional work — a week ahead of schedule and under budget. Communication was outstanding throughout."},
     {author:"Amy Chen",  company:"GreenLeaf",    rating:5,date:"May 2026",text:"Best developer I've worked with. Understood our vision from day one. Will definitely hire again."},
   ],
@@ -63,7 +63,7 @@ export default function PublicProfilePage() {
                   <span>@{WORKER.username}</span>
                 </div>
                 <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                  {[["$"+WORKER.rate+"/hr","💰"],["★"+WORKER.rating+" ("+WORKER.reviews+" reviews)","⭐"],[WORKER.jobs+" jobs","✅"],[WORKER.memberYears+"yr member","🏆"]].map(([v,ic],i)=>(
+                  {[["$"+WORKER.rate+"/hr","💰"],["★"+WORKER.rating+" ("+WORKER.testimonials+" reviews)","⭐"],[WORKER.jobs+" jobs","✅"],[WORKER.memberYears+"yr member","🏆"]].map(([v,ic],i)=>(
                     <span key={i} style={{display:"flex",alignItems:"center",gap:5,padding:"5px 12px",background:"rgba(26,107,255,0.07)",border:"1px solid rgba(26,107,255,0.14)",borderRadius:8,fontSize:"0.75rem",color:"rgba(255,255,255,0.7)"}}>{ic}{v}</span>
                   ))}
                 </div>
@@ -117,9 +117,9 @@ export default function PublicProfilePage() {
             {/* Reviews */}
             <div style={{background:"rgba(4,15,36,0.9)",border:"1px solid rgba(26,107,255,0.12)",borderRadius:16,padding:20}}>
               <h3 style={{fontWeight:800,marginBottom:14,display:"flex",alignItems:"center",gap:8}}>
-                Reviews <span style={{color:"#ffd700"}}>★</span><span style={{fontSize:"1.3rem"}}>{WORKER.rating}</span><span style={{fontSize:"0.8rem",color:"rgba(255,255,255,0.35)"}}>({WORKER.reviews})</span>
+                Reviews <span style={{color:"#ffd700"}}>★</span><span style={{fontSize:"1.3rem"}}>{WORKER.rating}</span><span style={{fontSize:"0.8rem",color:"rgba(255,255,255,0.35)"}}>({WORKER.testimonials})</span>
               </h3>
-              {WORKER.reviews.map((r,i)=>(
+              {WORKER.testimonials.map((r,i)=>(
                 <div key={i} style={{padding:14,background:"rgba(26,107,255,0.04)",border:"1px solid rgba(26,107,255,0.1)",borderRadius:12,marginBottom:10}}>
                   <div style={{display:"flex",justifyContent:"space-between",marginBottom:7}}>
                     <div><div style={{fontWeight:700,fontSize:"0.88rem"}}>{r.author}</div><div style={{fontSize:"0.7rem",color:"rgba(255,255,255,0.38)"}}>{r.company} · {r.date}</div></div>
