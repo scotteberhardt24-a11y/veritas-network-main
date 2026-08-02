@@ -131,7 +131,7 @@ export default function PassportPage() {
                   return(
                     <div key={b.id} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
                       <Comp size={110}/>
-                      <div style={{fontSize:"0.62rem",fontWeight:700,color:"rgba(255,255,255,0.7)",textAlign:"center",maxWidth:100}}>{b.label}</div>
+                      <div style={{fontSize:"0.62rem",fontWeight:700,color:"rgba(255,255,255,0.7)",textAlign:"center",maxWidth:100}}>{b.name}</div>
                       <div style={{fontSize:"0.55rem",color:"rgba(255,255,255,0.35)",textAlign:"center",maxWidth:100}}>{b.desc}</div>
                     </div>
                   );
@@ -146,7 +146,7 @@ export default function PassportPage() {
                       return(
                         <div key={b.id} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,opacity:0.35,filter:"grayscale(0.6)"}}>
                           <Comp size={110}/>
-                          <div style={{fontSize:"0.62rem",fontWeight:700,color:"rgba(255,255,255,0.5)",textAlign:"center",maxWidth:100}}>{b.label}</div>
+                          <div style={{fontSize:"0.62rem",fontWeight:700,color:"rgba(255,255,255,0.5)",textAlign:"center",maxWidth:100}}>{b.name}</div>
                           <div style={{fontSize:"0.55rem",color:"rgba(255,255,255,0.25)",textAlign:"center",maxWidth:100}}>{b.desc}</div>
                         </div>
                       );
