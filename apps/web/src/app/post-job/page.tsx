@@ -42,7 +42,7 @@ export default function JobWizardPage() {
     const data = await res.json();
     try {
       const text = data.content?.[0]?.text||"[]";
-      const parsed = JSON.parse(text.match(/\[.*\]/s)?.[0]||"[]");
+      const parsed = JSON.parse(text.match(/\[[\s\S]*\]/)?.[0]||"[]");
       setAiSkills(parsed.slice(0,6));
     } catch { setAiSkills(["React","TypeScript","Node.js","PostgreSQL","Tailwind","AWS"]); }
     setAiSug(false);
