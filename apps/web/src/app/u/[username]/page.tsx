@@ -117,7 +117,7 @@ export default function PublicProfilePage() {
             {/* Reviews */}
             <div style={{background:"rgba(4,15,36,0.9)",border:"1px solid rgba(26,107,255,0.12)",borderRadius:16,padding:20}}>
               <h3 style={{fontWeight:800,marginBottom:14,display:"flex",alignItems:"center",gap:8}}>
-                Reviews <span style={{color:"#ffd700"}}>★</span><span style={{fontSize:"1.3rem"}}>{WORKER.rating}</span><span style={{fontSize:"0.8rem",color:"rgba(255,255,255,0.35)"}}>({WORKER.testimonials})</span>
+                Reviews <span style={{color:"#ffd700"}}>★</span><span style={{fontSize:"1.3rem"}}>{WORKER.rating}</span><span style={{fontSize:"0.8rem",color:"rgba(255,255,255,0.35)"}}>({WORKER.reviews})</span>
               </h3>
               {WORKER.testimonials.map((r,i)=>(
                 <div key={i} style={{padding:14,background:"rgba(26,107,255,0.04)",border:"1px solid rgba(26,107,255,0.1)",borderRadius:12,marginBottom:10}}>
