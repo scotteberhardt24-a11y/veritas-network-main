@@ -85,7 +85,7 @@ export default function SearchV2Page() {
                           </div>
                           <div style={{fontSize:"0.78rem",color:"rgba(255,255,255,0.5)",marginBottom:5}}>{r.title} · {r.rate}</div>
                           <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-                            {r.skills.slice(0,3).map(s=><span key={s} style={{fontSize:"0.65rem",padding:"2px 8px",background:"rgba(26,107,255,0.07)",border:"1px solid rgba(26,107,255,0.14)",borderRadius:5,color:"rgba(255,255,255,0.55)"}}>{s}</span>)}
+                            {r.skills?.slice(0,3).map(s=><span key={s} style={{fontSize:"0.65rem",padding:"2px 8px",background:"rgba(26,107,255,0.07)",border:"1px solid rgba(26,107,255,0.14)",borderRadius:5,color:"rgba(255,255,255,0.55)"}}>{s}</span>)}
                           </div>
                         </div>
                         <div style={{textAlign:"right",flexShrink:0}}>
