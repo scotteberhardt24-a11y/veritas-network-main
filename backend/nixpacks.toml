@@ -1,3 +1,6 @@
+[phases.setup]
+nixPkgs = ["nodejs_24"]
+
 [phases.install]
 cmds = [
   "corepack enable",
@@ -9,4 +12,4 @@ cmds = [
 cmds = ["pnpm build"]
 
 [start]
-cmd = "node dist/server.js"
+cmd = "node src/server.js"
