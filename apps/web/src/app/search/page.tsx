@@ -76,10 +76,10 @@ export default function SearchV2Page() {
                   {results.map((r,i)=>(
                     r.type==="worker"?(
                       <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"16px 18px",background:"rgba(4,15,36,0.9)",border:"1px solid rgba(26,107,255,0.12)",borderRadius:14,cursor:"pointer",transition:"border-color 0.15s"}}>
-                        <div style={{width:50,height:50,borderRadius:13,background:"linear-gradient(135deg,#1a3a6b,#0d1f3d)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:"1.1rem",flexShrink:0}}>{r.name[0]}</div>
+                        <div style={{width:50,height:50,borderRadius:13,background:"linear-gradient(135deg,#1a3a6b,#0d1f3d)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:"1.1rem",flexShrink:0}}>{r.name?.[0]}</div>
                         <div style={{flex:1}}>
                           <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:3}}>
-                            <span style={{fontWeight:800,fontSize:"0.95rem"}}>{r.name}</span>
+                            <span style={{fontWeight:800,fontSize:"0.95rem"}}>{r.name || ""}</span>
                             {r.verified&&<Shield size={13} color="#1a6bff"/>}
                             <span style={{display:"flex",alignItems:"center",gap:3,fontSize:"0.62rem",color:"rgba(255,255,255,0.3)",background:"rgba(26,107,255,0.06)",padding:"2px 6px",borderRadius:5}}><Users size={9}/>Worker</span>
                           </div>
