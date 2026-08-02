@@ -108,7 +108,7 @@ export default function SkillTestPage() {
             <div style={{maxWidth:640,margin:"0 auto"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
                 <div style={{fontSize:"0.9rem",fontWeight:700}}>{selected?.label} Assessment</div>
-                <div style={{display:"flex",items:"center",gap:8,padding:"7px 14px",background:"rgba(240,192,64,0.08)",border:"1px solid rgba(240,192,64,0.2)",borderRadius:8,color:"#f0c040",fontWeight:800,fontSize:"0.85rem"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",background:"rgba(240,192,64,0.08)",border:"1px solid rgba(240,192,64,0.2)",borderRadius:8,color:"#f0c040",fontWeight:800,fontSize:"0.85rem"}}>
                   <Clock size={14} style={{display:"inline",marginRight:4}}/>{fmt(timeLeft)}
                 </div>
               </div>
