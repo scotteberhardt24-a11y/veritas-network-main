@@ -1,0 +1,14 @@
+.git
+.gitignore
+.env.example
+.env*.local
+*.md
+/test
+/docs
+/scripts
+/.hardhat
+/cache
+/artifacts
+/backend
+/apps/mobile
+/server

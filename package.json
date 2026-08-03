@@ -6,16 +6,22 @@
     "test": "hardhat test",
     "deploy:testnet": "hardhat run scripts/deploy.ts --network amoy",
     "deploy:mainnet": "hardhat run scripts/deploy.ts --network polygon",
-    "verify": "hardhat verify --network polygon"
+    "verify": "hardhat verify --network polygon",
+    "web:dev": "pnpm --filter=veritas-web dev",
+    "web:build": "pnpm --filter=veritas-web build",
+    "build": "pnpm --filter=veritas-web build"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@types/node": "^20.0.0",
     "hardhat": "^2.22.0",
-    "typescript": "^5.0.0",
     "ts-node": "^10.9.0",
-    "@types/node": "^20.0.0"
+    "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.0.0"
+    "@openzeppelin/contracts": "^5.0.0",
+    "dotenv": "^17.4.2",
+    "googleapis": "^173.0.0",
+    "open": "^11.0.0"
   }
 }
