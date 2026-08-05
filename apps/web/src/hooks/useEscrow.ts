@@ -10,7 +10,7 @@ export function useEscrow() {
     return await publicClient.readContract({
       address: ESCROW_ADDRESS as `0x${string}`,
       abi,
-      functionName: "getJob",
+      functionName: "getEscrow",
       args: [BigInt(jobId)],
     });
   }
