@@ -1,6 +1,5 @@
-
 "use client";
-import { useState, useEffect } from "react";
+import { useState, type MouseEvent } from "react";
 import Sidebar from "@/components/sidebar/Sidebar";
 import TopBar from "@/components/topbar/TopBar";
 import { useAuth } from "@/context/AuthContext";
@@ -30,7 +29,10 @@ export default function PassportV2Page() {
     { Comp:Jobs50Badge,         name:"50 Jobs",       date:"Jun 2026", pts:100},
   ];
 
-  const STATS = [
+  type StatItem = { label: string; value: string | number; color: string; icon: string };
+  type BreakdownItem = { label: string; value: number; max: number; pts: number; color: string };
+
+  const STATS: StatItem[] = [
     {label:"Trust Score",  value:trustScore, color:"#00e676", icon:"🛡️"},
     {label:"Jobs Done",    value:94,          color:"#4da6ff", icon:"💼"},
     {label:"On-Time Rate", value:"100%",      color:"#00e676", icon:"⏱️"},
@@ -39,13 +41,23 @@ export default function PassportV2Page() {
     {label:"Badges",       value:EARNED_BADGES.length, color:"#a78bfa", icon:"🏆"},
   ];
 
+  const TRUST_SCORE_BREAKDOWN: BreakdownItem[] = [
+    {label:"Job Completion",    value:94,  max:100, pts:282,  color:"#4da6ff"},
+    {label:"On-Time Delivery",  value:100, max:100, pts:200,  color:"#00e676"},
+    {label:"Client Reviews",    value:50,  max:50,  pts:150,  color:"#f0c040"},
+    {label:"Verification Level",value:3,   max:5,   pts:130,  color:"#a78bfa"},
+    {label:"Response Rate",     value:98,  max:100, pts:83,   color:"#00d4ff"},
+  ];
+
   function copyAddr() {
-    navigator.clipboard.writeText(walletAddr);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(walletAddr);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   }
 
-  function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+  function handleMouseMove(e: MouseEvent<HTMLDivElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width - 0.5) * 20;
     const y = ((e.clientY - rect.top) / rect.height - 0.5) * -20;
@@ -132,10 +144,14 @@ export default function PassportV2Page() {
                   <div style={{fontSize:"0.7rem",color:"rgba(255,255,255,0.45)",textAlign:"center",marginBottom:14}}>@{user?.email?.split("@")[0] || "username"}</div>
 
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginBottom:12}}>
-                    {[["Score",trustScore,"#00e676"],["Tier",tier,"#f0c040"],["Top",`${percentile}%`,"#4da6ff"]].map(([l,v,c],i)=>(
+                    {[
+                      {label:"Score", value:trustScore, color:"#00e676"},
+                      {label:"Tier", value:tier, color:"#f0c040"},
+                      {label:"Top", value:`${percentile}%`, color:"#4da6ff"},
+                    ].map((item, i)=>(
                       <div key={i} style={{textAlign:"center",padding:"6px",background:"rgba(26,107,255,0.08)",borderRadius:7}}>
-                        <div style={{fontWeight:800,color:c,fontSize:"0.82rem",lineHeight:1,marginBottom:2}}>{v}</div>
-                        <div style={{fontSize:"0.52rem",color:"rgba(255,255,255,0.35)"}}>{l}</div>
+                        <div style={{fontWeight:800,color:item.color,fontSize:"0.82rem",lineHeight:1,marginBottom:2}}>{item.value}</div>
+                        <div style={{fontSize:"0.52rem",color:"rgba(255,255,255,0.35)"}}>{item.label}</div>
                       </div>
                     ))}
                   </div>
@@ -162,13 +178,7 @@ export default function PassportV2Page() {
                 {/* Trust Score breakdown */}
                 <div style={{background:"rgba(4,15,36,0.9)",border:"1px solid rgba(26,107,255,0.14)",borderRadius:16,padding:20}}>
                   <div style={{fontWeight:800,marginBottom:14,display:"flex",alignItems:"center",gap:7}}><TrendingUp size={16} color="#00e676"/>Trust Score Breakdown</div>
-                  {[
-                    {label:"Job Completion",    value:94,  max:100, pts:282,  color:"#4da6ff"},
-                    {label:"On-Time Delivery",  value:100, max:100, pts:200,  color:"#00e676"},
-                    {label:"Client Reviews",    value:50,  max:50,  pts:150,  color:"#f0c040"},
-                    {label:"Verification Level",value:3,   max:5,   pts:130,  color:"#a78bfa"},
-                    {label:"Response Rate",     value:98,  max:100, pts:83,   color:"#00d4ff"},
-                  ].map((s,i)=>(
+                  {TRUST_SCORE_BREAKDOWN.map((s,i)=>(
                     <div key={i} style={{marginBottom:10}}>
                       <div style={{display:"flex",justifyContent:"space-between",marginBottom:4,fontSize:"0.78rem"}}>
                         <span style={{color:"rgba(255,255,255,0.6)"}}>{s.label}</span>
