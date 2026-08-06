@@ -5,5 +5,5 @@ export const ABI = [] as const;
 export const NFT_ABI = [] as const;
 export const ESCROW_ABI = [] as const;
 export const publicClient = { readContract: async (args: any) => null };
-export const walletClient = { writeContract: async (args: any) => "0x" as \`0x\${string}\` };
+export const walletClient = { writeContract: async (args: any) => "0x" as `0x${string}` };
 export function getContract() { return null; }
