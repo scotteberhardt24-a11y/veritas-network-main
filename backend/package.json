@@ -1,8 +1,8 @@
 {
   "name": "veritas-backend",
   "version": "1.0.0",
-  "private": "true",
-  "description": "Veritas Trust Ledger API — Node/Express backend (Railway-ready)",
+  "private": true,
+  "description": "Veritas Trust Ledger API \u2014 Node/Express backend (Railway-ready)",
   "main": "src/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
@@ -83,6 +83,5 @@
   "engines": {
     "node": ">=20.0.0"
   },
-
   "packageManager": "pnpm@9.15.0"
 }
