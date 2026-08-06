@@ -147,6 +147,14 @@ function LoginPageInner() {
   );
 }
 
+function LoginPageInner() {
+  return (
+    <Suspense fallback={<div style={{minHeight:"100vh",background:"#030d1e"}}/>}>
+      <LoginPageInner/>
+    </Suspense>
+  );
+}
+
 export default function LoginPage() {
   return (
     <Suspense fallback={<div style={{minHeight:"100vh",background:"#030d1e"}}/>}>
