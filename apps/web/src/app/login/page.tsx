@@ -1,6 +1,6 @@
 
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { VeritasEmblem, VeritasVerifiedBadge } from "@/components/badges/VeritasBadges";
 import { Eye, EyeOff, Loader2, ArrowRight, Shield } from "lucide-react";
@@ -14,7 +14,7 @@ const FLOATING = [
   { score:830, size:58, x:"2%",  y:"42%", delay:1.0 },
 ];
 
-export default function LoginPage() {
+function LoginPageInner() {
   const router      = useRouter();
   const params      = useSearchParams();
   const { login, isAuth } = useAuth();
@@ -144,5 +144,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div style={{minHeight:"100vh",background:"#030d1e"}}/>}>
+      <LoginPageInner/>
+    </Suspense>
   );
 }
