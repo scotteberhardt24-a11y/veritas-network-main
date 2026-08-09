@@ -1,15 +1,8 @@
-[phases.setup]
-nixPkgs = ["nodejs_24"]
-
 [phases.install]
-cmds = [
-  "corepack enable",
-  "corepack prepare pnpm@9 --activate",
-  "pnpm install"
-]
+cmds = ["npm install -g pnpm@9.15.0", "pnpm install"]
 
 [phases.build]
-cmds = ["pnpm build"]
+cmds = ["npx prisma generate", "npx tsc"]
 
 [start]
-cmd = "node src/server.js"
+cmd = "node dist/server.js"
