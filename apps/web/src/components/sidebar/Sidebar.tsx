@@ -74,8 +74,10 @@ const NAV_SECTIONS = [
       { href:"/community",        icon:Users,           label:"Community"         },
     ]
   },
+  // Developer section - filtered by role in render
   {
     label: "Developer",
+    devOnly: true,
     items: [
       { href:"/api-keys",         icon:Key,             label:"API Keys"          },
       { href:"/webhooks",         icon:Webhook,         label:"Webhooks"          },
@@ -155,7 +157,7 @@ export default function Sidebar() {
 
       {/* Nav */}
       <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
-        {NAV_SECTIONS.map((section, si) => (
+        {NAV_SECTIONS.filter(s => !(s as any).devOnly || (user?.trustScore || 0) >= 800).map((section, si) => (
           <div key={si} style={{ marginBottom: 4 }}>
             {!collapsed && (
               <div style={{ padding: "6px 14px 3px", fontSize: "0.55rem", fontWeight: 700, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
