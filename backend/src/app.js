@@ -19,6 +19,7 @@ const adminRoutes = require("./routes/adminRoutes");
 const healthRoutes = require("./routes/healthRoutes");
 
 const app = express();
+app.set('trust proxy', 1);
 const passportRoutes = require("./routes/passportRoutes");
 /* =========================================================
    GLOBAL MIDDLEWARE
