@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@tailwindcss/postcss": "^4.3.0",
     "@types/node": "^20.0.0",
     "hardhat": "^2.22.0",
     "ts-node": "^10.9.0",
@@ -24,5 +25,5 @@
     "googleapis": "^173.0.0",
     "open": "^11.0.0"
   },
-  "packageManager": "pnpm@9.0.0"
+  "packageManager": "pnpm@9.15.0+sha512.76e2379760a4328ec4415815bcd6628dee727af3779aaa4c914e3944156c4299921a89f976381ee107d41f12cfa4b66681ca9c718f0668fa0831ed4c6d8ba56c"
 }

@@ -1,3 +1,7 @@
-k
-[
-]
+{
+  "files": [],
+  "references": [
+    { "path": "./apps/web/tsconfig.json" },
+    { "path": "./apps/mobile/tsconfig.json" }
+  ]
+}
