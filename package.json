@@ -1,29 +1,21 @@
 {
   "name": "veritas-contracts",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
     "deploy:testnet": "hardhat run scripts/deploy.ts --network amoy",
-    "deploy:mainnet": "hardhat run scripts/deploy.ts --network polygon",
-    "verify": "hardhat verify --network polygon",
-    "web:dev": "pnpm --filter=veritas-web dev",
-    "web:build": "pnpm --filter=veritas-web build",
-    "build": "pnpm --filter=veritas-web build"
+    "deploy:mainnet": "hardhat run scripts/deploy.ts --network polygon"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
-    "@tailwindcss/postcss": "^4.3.0",
-    "@types/node": "^20.0.0",
     "hardhat": "^2.22.0",
+    "typescript": "^5.0.0",
     "ts-node": "^10.9.0",
-    "typescript": "^5.0.0"
+    "@types/node": "^20.0.0"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.0.0",
-    "dotenv": "^17.4.2",
-    "googleapis": "^173.0.0",
-    "open": "^11.0.0"
-  },
-  "packageManager": "pnpm@9.15.0+sha512.76e2379760a4328ec4415815bcd6628dee727af3779aaa4c914e3944156c4299921a89f976381ee107d41f12cfa4b66681ca9c718f0668fa0831ed4c6d8ba56c"
+    "dotenv": "^16.0.0"
+  }
 }
