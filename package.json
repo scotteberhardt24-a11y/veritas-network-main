@@ -1,0 +1,26 @@
+{
+  "name": "veritas-network-main",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scotteberhardt24-a11y/veritas-network-main.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/scotteberhardt24-a11y/veritas-network-main/issues"
+  },
+  "homepage": "https://github.com/scotteberhardt24-a11y/veritas-network-main#readme"
+}
