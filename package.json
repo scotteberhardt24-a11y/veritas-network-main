@@ -1,0 +1,21 @@
+{
+  "name": "veritas-network",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Veritas Network monorepo",
+  "packageManager": "pnpm@10.28.0",
+  "scripts": {
+    "dev": "pnpm --filter veritas-web dev",
+    "build": "pnpm --filter veritas-web build",
+    "lint": "pnpm --filter veritas-web lint"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "19.1.4",
+      "@types/react-dom": "19.1.4"
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
