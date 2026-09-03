@@ -1,0 +1,14 @@
+{
+  "name": "@veritas/truscore",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "tsx --test src/computeTruScore.test.ts"
+  }
+}

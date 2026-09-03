@@ -1,269 +1,218 @@
-
 "use client";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Shield, Lock, Users, Globe, ArrowRight, CheckCircle, Star, DollarSign, Zap, TrendingUp, Award } from "lucide-react";
 
-const NETWORK_NODES = [
-  {x:15,y:20},{x:35,y:8},{x:55,y:15},{x:75,y:10},{x:90,y:25},
-  {x:10,y:45},{x:28,y:38},{x:50,y:35},{x:70,y:30},{x:85,y:48},
-  {x:20,y:65},{x:42,y:58},{x:62,y:62},{x:80,y:68},{x:95,y:55},
-  {x:8,y:80},{x:30,y:78},{x:55,y:85},{x:72,y:82},{x:88,y:78},
-];
-const CONNECTIONS = [
-  [0,1],[1,2],[2,3],[3,4],[0,5],[1,6],[2,7],[3,8],[4,9],
-  [5,6],[6,7],[7,8],[8,9],[5,10],[6,11],[7,12],[8,13],[9,14],
-  [10,11],[11,12],[12,13],[13,14],[10,15],[11,16],[12,17],[13,18],[14,19],
-  [15,16],[16,17],[17,18],[18,19],
-];
-
-const NAV_LINKS = [
-  { label:"How It Works", href:"/how-matching-works" },
-  { label:"Pricing",      href:"/pricing" },
-  { label:"For Workers",  href:"/onboarding" },
-  { label:"Enterprise",   href:"/contact" },
-];
-
-const CATEGORIES = [
-  { icon:"💻", label:"Development",  href:"/job-board?cat=Development",  count:"2,847 jobs" },
-  { icon:"🎨", label:"Design",       href:"/job-board?cat=Design",       count:"1,203 jobs" },
-  { icon:"✍️", label:"Writing",      href:"/job-board?cat=Writing",      count:"987 jobs"  },
-  { icon:"📈", label:"Marketing",    href:"/job-board?cat=Marketing",    count:"754 jobs"  },
-  { icon:"🎬", label:"Video",        href:"/job-board?cat=Video",        count:"432 jobs"  },
-  { icon:"⚡", label:"Web3",         href:"/job-board?cat=Web3",         count:"891 jobs"  },
-  { icon:"📊", label:"Data",         href:"/job-board?cat=Data",         count:"623 jobs"  },
-  { icon:"🤝", label:"Consulting",   href:"/job-board?cat=Consulting",   count:"318 jobs"  },
-];
-
-function HeroBadge({ score }: { score: number }) {
-  return (
-    <svg width={250} height={290} viewBox="0 0 250 290" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="hb-gold" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#F5D97A"/><stop offset="50%" stopColor="#D4AF37"/><stop offset="100%" stopColor="#8B6914"/></linearGradient>
-        <linearGradient id="hb-blue" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#1a4a9e"/><stop offset="100%" stopColor="#0d2d6b"/></linearGradient>
-        <linearGradient id="hb-green" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#4dcc6a"/><stop offset="100%" stopColor="#1a7a3a"/></linearGradient>
-        <linearGradient id="hb-ribbon" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#3dba5e"/><stop offset="100%" stopColor="#1a6b30"/></linearGradient>
-      </defs>
-      {Array.from({length:10},(_,i)=>{const t=i/9;const angle=(-0.1+t*1.1)*Math.PI;const r=115;const lx=125-r*Math.cos(angle)*0.85;const ly=140+r*Math.sin(angle)*0.6;return<ellipse key={`ll${i}`} cx={lx} cy={ly} rx={14} ry={6} fill={i%2===0?"#D4AF37":"#8B6914"} opacity={0.9} transform={`rotate(${angle*180/Math.PI-90},${lx},${ly})`}/>})}
-      {Array.from({length:10},(_,i)=>{const t=i/9;const angle=(0.1-t*1.1)*Math.PI+Math.PI;const r=115;const lx=125+r*Math.cos(angle-Math.PI)*0.85;const ly=140+r*Math.sin(angle)*0.6;return<ellipse key={`lr${i}`} cx={lx} cy={ly} rx={14} ry={6} fill={i%2===0?"#D4AF37":"#8B6914"} opacity={0.9} transform={`rotate(${(angle-Math.PI)*180/Math.PI+90},${lx},${ly})`}/>})}
-      <path d="M125 18 L222 55 L222 155 Q222 230 125 270 Q28 230 28 155 L28 55 Z" fill="url(#hb-gold)"/>
-      <path d="M125 30 L210 63 L210 155 Q210 220 125 258 Q40 220 40 155 L40 63 Z" fill="url(#hb-blue)"/>
-      {[0.28,0.5,0.72].map((x,i)=><text key={i} x={250*x} y={82} textAnchor="middle" fontSize={14} fill="#D4AF37" opacity={0.8}>★</text>)}
-      <text x={125} y={100} textAnchor="middle" fontSize={22} fontWeight="900" fill="#D4AF37" fontFamily="Arial,sans-serif" letterSpacing="3">VERITAS</text>
-      <text x={125} y={120} textAnchor="middle" fontSize={16} fontWeight="900" fill="white" fontFamily="Arial,sans-serif" letterSpacing="2">VERIFIED</text>
-      <circle cx={125} cy={158} r={38} fill="url(#hb-green)" stroke="#D4AF37" strokeWidth={3}/>
-      <polyline points="107,158 120,172 145,140" stroke="#D4AF37" strokeWidth={8} strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-      <rect x={28} y={200} width={194} height={22} rx={5} fill="url(#hb-ribbon)"/>
-      <polygon points="28,200 12,209 28,222" fill="#1a5c28"/>
-      <polygon points="222,200 238,209 222,222" fill="#1a5c28"/>
-      <text x={125} y={216} textAnchor="middle" fontSize={13} fontWeight="900" fill="white" fontFamily="Arial,sans-serif" letterSpacing="2">TRUST SCORE</text>
-      <text x={125} y={258} textAnchor="middle" fontSize={36} fontWeight="900" fill="#D4AF37" fontFamily="Arial,sans-serif" stroke="#8B6914" strokeWidth={1.5}>{score}</text>
-    </svg>
-  );
-}
+import Link from "next/link";
 
 export default function HomePage() {
-  const router = useRouter();
-  const [pulse, setPulse] = useState(0);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    const t = setInterval(() => setPulse(p => (p + 1) % NETWORK_NODES.length), 400);
-    return () => clearInterval(t);
-  }, []);
-
   return (
-    <div style={{ background:"#030d1e", minHeight:"100vh", color:"white", fontFamily:"Arial,sans-serif", overflowX:"hidden" }}>
+    <main style={{ minHeight: "100vh", background: "#030d1e", color: "#fff" }}>
+      {/* Hero */}
+      <section
+        style={{
+          maxWidth: 960,
+          margin: "0 auto",
+          padding: "96px 24px 64px",
+          textAlign: "center",
+        }}
+      >
+        <p
+          style={{
+            color: "#D4AF37",
+            fontSize: 13,
+            letterSpacing: 2,
+            textTransform: "uppercase",
+            marginBottom: 16,
+          }}
+        >
+          Veritas Network
+        </p>
+        <h1
+          style={{
+            fontSize: "clamp(2.2rem, 5vw, 3.4rem)",
+            fontWeight: 700,
+            lineHeight: 1.15,
+            margin: "0 0 20px",
+          }}
+        >
+          One Badge. Any Job. Everywhere.
+        </h1>
+        <p
+          style={{
+            fontSize: 18,
+            lineHeight: 1.6,
+            color: "#94a3b8",
+            maxWidth: 640,
+            margin: "0 auto 32px",
+          }}
+        >
+          Veritas is the professional identity layer for work — a lifetime,
+          soulbound Trust Passport that only records verified acts, paired with
+          a marketplace that hires on truth instead of profiles.
+        </p>
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            justifyContent: "center",
+            flexWrap: "wrap",
+          }}
+        >
+          <Link
+            href="/passport"
+            style={{
+              background: "#D4AF37",
+              color: "#000",
+              padding: "12px 22px",
+              borderRadius: 8,
+              fontWeight: 600,
+              textDecoration: "none",
+            }}
+          >
+            Get your Passport
+          </Link>
+          <Link
+            href="/jobs"
+            style={{
+              background: "#1a6bff",
+              color: "#fff",
+              padding: "12px 22px",
+              borderRadius: 8,
+              fontWeight: 600,
+              textDecoration: "none",
+            }}
+          >
+            Browse jobs
+          </Link>
+        </div>
+        <p style={{ marginTop: 16, fontSize: 14 }}>
+          <Link href="https://github.com/scotteberhardt24-a11y/Veritas-Identity-Protocol" style={{ color: "#64748b" }}>
+            Read the open protocol →
+          </Link>
+        </p>
+      </section>
 
-      {/* NAV */}
-      <nav style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 48px", borderBottom:"1px solid rgba(255,255,255,0.08)", position:"sticky", top:0, background:"rgba(3,13,30,0.97)", backdropFilter:"blur(20px)", zIndex:100 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:14, cursor:"pointer" }} onClick={()=>router.push("/")}>
-          <svg width={44} height={50} viewBox="0 0 44 50">
-            <defs>
-              <linearGradient id="nav-gold" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#F5D97A"/><stop offset="100%" stopColor="#8B6914"/></linearGradient>
-              <linearGradient id="nav-blue" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#1a4a9e"/><stop offset="100%" stopColor="#0d2d6b"/></linearGradient>
-            </defs>
-            <path d="M22 2 L42 10 L42 30 Q42 44 22 50 Q2 44 2 30 L2 10 Z" fill="url(#nav-gold)"/>
-            <path d="M22 7 L37 13 L37 30 Q37 41 22 46 Q7 41 7 30 L7 13 Z" fill="url(#nav-blue)"/>
-            <polyline points="13,26 19,33 31,18" stroke="#D4AF37" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-          </svg>
-          <div>
-            <div style={{ fontSize:"1.4rem", fontWeight:900, letterSpacing:"0.15em" }}>VERITAS</div>
-            <div style={{ fontSize:"0.5rem", letterSpacing:"0.25em", color:"#4da6ff", textTransform:"uppercase", marginTop:-2 }}>TRUTH BECOMES TRUST</div>
-          </div>
+      {/* Trust strip */}
+      <section
+        style={{
+          borderTop: "1px solid #1e293b",
+          borderBottom: "1px solid #1e293b",
+          padding: "20px 24px",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 960,
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+            gap: 12,
+            textAlign: "center",
+            fontSize: 13,
+            color: "#94a3b8",
+          }}
+        >
+          <span>Soulbound (non-transferable)</span>
+          <span>Append-only history</span>
+          <span>World ID–ready uniqueness</span>
+          <span>Open Identity Protocol</span>
         </div>
-        <div style={{ display:"flex", alignItems:"center", gap:24 }}>
-          {NAV_LINKS.map(l=>(
-            <span key={l.label} onClick={()=>router.push(l.href)} style={{ fontSize:"0.82rem", color:"rgba(255,255,255,0.65)", cursor:"pointer", transition:"color 0.2s" }}
-              onMouseEnter={e=>(e.currentTarget as HTMLSpanElement).style.color="white"}
-              onMouseLeave={e=>(e.currentTarget as HTMLSpanElement).style.color="rgba(255,255,255,0.65)"}>{l.label}</span>
-          ))}
-          <button onClick={()=>router.push("/login")} style={{ padding:"8px 18px", background:"transparent", border:"1px solid rgba(255,255,255,0.3)", borderRadius:6, color:"white", fontSize:"0.82rem", cursor:"pointer" }}>Sign In</button>
-          <button onClick={()=>router.push("/signup")} style={{ padding:"9px 22px", background:"linear-gradient(135deg,#1a6bff,#0040cc)", border:"none", borderRadius:6, color:"white", fontSize:"0.85rem", fontWeight:700, cursor:"pointer", boxShadow:"0 4px 16px rgba(26,107,255,0.4)" }}>Get Verified Free</button>
-        </div>
-      </nav>
+      </section>
 
-      {/* HERO */}
-      <section style={{ position:"relative", minHeight:480, display:"flex", alignItems:"center", overflow:"hidden", padding:"60px 48px" }}>
-        <svg style={{ position:"absolute", inset:0, width:"100%", height:"100%", opacity:0.35 }} viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
-          {CONNECTIONS.map(([a,b],i)=><line key={i} x1={NETWORK_NODES[a].x} y1={NETWORK_NODES[a].y} x2={NETWORK_NODES[b].x} y2={NETWORK_NODES[b].y} stroke="#4da6ff" strokeWidth="0.15" opacity="0.5"/>)}
-          {NETWORK_NODES.map((n,i)=>(
-            <g key={i}>
-              <circle cx={n.x} cy={n.y} r={i===pulse?0.8:0.4} fill="#4da6ff" opacity={i===pulse?1:0.5}/>
-              {i===pulse&&<circle cx={n.x} cy={n.y} r={2} fill="none" stroke="#4da6ff" strokeWidth="0.2" opacity="0.4"/>}
-            </g>
-          ))}
-        </svg>
-        <div style={{ position:"absolute", right:"25%", top:"50%", transform:"translateY(-50%)", width:400, height:400, background:"radial-gradient(circle,rgba(26,107,255,0.2) 0%,transparent 70%)", pointerEvents:"none" }}/>
-        <div style={{ position:"relative", zIndex:2, flex:1, maxWidth:600 }}>
-          <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"6px 14px", background:"rgba(26,107,255,0.15)", border:"1px solid rgba(26,107,255,0.35)", borderRadius:20, fontSize:"0.72rem", color:"#4da6ff", fontWeight:700, letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:20 }}>🛡️ Blockchain-Verified Trust Platform</div>
-          <h1 style={{ fontSize:"3.2rem", fontWeight:900, lineHeight:1.1, marginBottom:12, letterSpacing:"-0.02em" }}>
-            PORTABLE TRUTH BADGES<br/><span style={{ color:"#4da6ff" }}>FOR GIG WORKERS</span>
-          </h1>
-          <p style={{ fontSize:"1rem", color:"rgba(255,255,255,0.6)", lineHeight:1.7, marginBottom:28, maxWidth:500 }}>One verified badge follows you everywhere. Clients see your real Trust Score — blockchain-verified, impossible to fake.</p>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:28 }}>
-            {[{ic:<Shield size={16}/>,t:"VERIFIED WORKERS"},{ic:<Lock size={16}/>,t:"ESCROW PROTECTION"},{ic:<Users size={16}/>,t:"SAFER HIRING"},{ic:<Globe size={16}/>,t:"PROTECTED EVERYWHERE"}].map((p,i)=>(
-              <div key={i} style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:6, padding:"10px 8px", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:8 }}>
-                <div style={{ color:"#4da6ff" }}>{p.ic}</div>
-                <div style={{ fontSize:"0.6rem", fontWeight:800, letterSpacing:"0.08em", textAlign:"center" }}>{p.t}</div>
-              </div>
-            ))}
+      {/* How it works */}
+      <section style={{ maxWidth: 960, margin: "0 auto", padding: "64px 24px" }}>
+        <h2 style={{ textAlign: "center", fontSize: 28, marginBottom: 40 }}>
+          How it works
+        </h2>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: 28,
+          }}
+        >
+          <div
+            style={{
+              background: "#0a1628",
+              border: "1px solid #1e293b",
+              borderRadius: 12,
+              padding: 24,
+            }}
+          >
+            <h3 style={{ color: "#D4AF37", marginTop: 0 }}>For workers</h3>
+            <ol style={{ color: "#cbd5e1", lineHeight: 1.7, paddingLeft: 20 }}>
+              <li>Prove you’re unique — one human, one passport for life</li>
+              <li>Mint your Trust Passport — soulbound identity on-chain</li>
+              <li>Do real work — only verified completions count</li>
+              <li>Grow TruScore — append-only, no resets</li>
+              <li>Take reputation with you across platforms</li>
+            </ol>
           </div>
-          <div style={{ display:"flex", gap:12, alignItems:"center", marginBottom:16 }}>
-            <button onClick={()=>router.push("/signup")} style={{ padding:"14px 32px", background:"linear-gradient(135deg,#1a6bff,#0040cc)", border:"none", borderRadius:8, color:"white", fontSize:"1rem", fontWeight:800, cursor:"pointer", boxShadow:"0 6px 24px rgba(26,107,255,0.45)", display:"flex", alignItems:"center", gap:8 }}>
-              Get Verified Free <ArrowRight size={18}/>
-            </button>
-            <button onClick={()=>router.push("/how-matching-works")} style={{ padding:"14px 24px", background:"transparent", border:"1px solid rgba(255,255,255,0.25)", borderRadius:8, color:"white", fontSize:"0.9rem", cursor:"pointer" }}>See How It Works</button>
-          </div>
-          <div style={{ fontSize:"0.72rem", color:"rgba(255,255,255,0.35)", letterSpacing:"0.12em", textTransform:"uppercase" }}>ONE BADGE. ANY JOB. EVERYWHERE.</div>
-        </div>
-        <div style={{ position:"relative", zIndex:2, flexShrink:0, marginLeft:60 }}>
-          <div style={{ position:"relative", width:260, height:300 }}>
-            <div style={{ position:"absolute", inset:-20, background:"radial-gradient(circle,rgba(212,175,55,0.25) 0%,transparent 70%)", borderRadius:"50%" }}/>
-            <HeroBadge score={845}/>
+          <div
+            style={{
+              background: "#0a1628",
+              border: "1px solid #1e293b",
+              borderRadius: 12,
+              padding: 24,
+            }}
+          >
+            <h3 style={{ color: "#1a6bff", marginTop: 0 }}>For clients</h3>
+            <ol style={{ color: "#cbd5e1", lineHeight: 1.7, paddingLeft: 20 }}>
+              <li>Post a job or rent a bot</li>
+              <li>Match on verified skills and TruScore</li>
+              <li>Lock funds in escrow until delivery</li>
+              <li>Release payment on dual-attested completion</li>
+              <li>Build a truth graph, not a stack of résumés</li>
+            </ol>
           </div>
         </div>
       </section>
 
-      {/* CATEGORIES */}
-      <section style={{ padding:"48px 48px", borderTop:"1px solid rgba(255,255,255,0.06)", background:"rgba(255,255,255,0.01)" }}>
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:24 }}>
-          <h2 style={{ fontSize:"1.4rem", fontWeight:900, margin:0 }}>Browse by Category</h2>
-          <button onClick={()=>router.push("/job-board")} style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 16px", background:"rgba(26,107,255,0.08)", border:"1px solid rgba(26,107,255,0.2)", borderRadius:8, color:"#4da6ff", fontSize:"0.8rem", fontWeight:600, cursor:"pointer" }}>
-            View All Jobs <ArrowRight size={13}/>
-          </button>
-        </div>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(8,1fr)", gap:12 }}>
-          {CATEGORIES.map((c,i)=>(
-            <div key={i} onClick={()=>router.push(c.href)} style={{ padding:"18px 12px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:14, textAlign:"center", cursor:"pointer", transition:"all 0.2s" }}
-              onMouseEnter={e=>{(e.currentTarget as HTMLDivElement).style.background="rgba(26,107,255,0.1)";(e.currentTarget as HTMLDivElement).style.borderColor="rgba(26,107,255,0.3)";}}
-              onMouseLeave={e=>{(e.currentTarget as HTMLDivElement).style.background="rgba(255,255,255,0.03)";(e.currentTarget as HTMLDivElement).style.borderColor="rgba(255,255,255,0.07)";}}>
-              <div style={{ fontSize:"1.8rem", marginBottom:8 }}>{c.icon}</div>
-              <div style={{ fontWeight:700, fontSize:"0.82rem", marginBottom:4 }}>{c.label}</div>
-              <div style={{ fontSize:"0.62rem", color:"rgba(255,255,255,0.4)" }}>{c.count}</div>
-            </div>
+      {/* Feature cards */}
+      <section style={{ maxWidth: 960, margin: "0 auto", padding: "0 24px 80px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: 16,
+          }}
+        >
+          {[
+            {
+              href: "/passport",
+              title: "Trust Passport",
+              body: "Lifetime soulbound identity. Verified acts only.",
+            },
+            {
+              href: "/bots",
+              title: "Rent a Bot",
+              body: "Escrowed automated workers with attested delivery.",
+            },
+            {
+              href: "/jobs",
+              title: "Job Board",
+              body: "Hire on truth — history that can’t be wiped.",
+            },
+          ].map((card) => (
+            <Link
+              key={card.href}
+              href={card.href}
+              style={{
+                display: "block",
+                background: "#0a1628",
+                border: "1px solid #1e293b",
+                borderRadius: 12,
+                padding: 20,
+                textDecoration: "none",
+                color: "#fff",
+              }}
+            >
+              <h3 style={{ margin: "0 0 8px", color: "#D4AF37" }}>{card.title}</h3>
+              <p style={{ margin: 0, color: "#94a3b8", fontSize: 14, lineHeight: 1.5 }}>
+                {card.body}
+              </p>
+            </Link>
           ))}
         </div>
       </section>
-
-      {/* HOW IT WORKS */}
-      <section style={{ padding:"64px 48px", borderTop:"1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:40 }}>
-          <div style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:20, padding:36 }}>
-            <h2 style={{ fontSize:"1.4rem", fontWeight:900, textAlign:"center", marginBottom:32, letterSpacing:"0.04em" }}>HOW VERITAS PROTECTS EVERYONE</h2>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:28 }}>
-              {[{n:"1",t:"WORKER VERIFIED",d:"Identity, skills, and background verified.",ic:"👤"},{n:"2",t:"BADGE EARNED",d:"Portable truth badge earned and secured.",ic:"🛡️"},{n:"3",t:"CUSTOMER PROTECTED",d:"Customers see verified trust before they hire.",ic:"👥"},{n:"4",t:"ESCROW RELEASED",d:"Job completed. Escrow released safely.",ic:"🔓"}].map((s,i)=>(
-                <div key={i} style={{ textAlign:"center", padding:"20px 12px", background:"rgba(26,107,255,0.05)", border:"1px solid rgba(26,107,255,0.12)", borderRadius:12 }}>
-                  <div style={{ width:44, height:44, borderRadius:"50%", background:"rgba(26,107,255,0.15)", border:"2px solid #1a6bff", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 8px", fontSize:"1.3rem" }}>{s.ic}</div>
-                  <div style={{ fontSize:"0.7rem", fontWeight:800, color:"#4da6ff", letterSpacing:"0.06em", marginBottom:4 }}>{s.n}. {s.t}</div>
-                  <div style={{ fontSize:"0.72rem", color:"rgba(255,255,255,0.5)", lineHeight:1.5 }}>{s.d}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, borderTop:"1px solid rgba(26,107,255,0.1)", paddingTop:16 }}>
-              {[{ic:<Shield size={14}/>,t:"VERIFICATION"},{ic:<Lock size={14}/>,t:"ESCROW"},{ic:<CheckCircle size={14}/>,t:"INSURANCE"},{ic:<Users size={14}/>,t:"DISPUTE PROTECTION"}].map((b,i)=>(
-                <div key={i} style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, fontSize:"0.58rem", fontWeight:700, color:"rgba(255,255,255,0.5)", letterSpacing:"0.05em", textAlign:"center" }}>
-                  <div style={{ color:"#4da6ff" }}>{b.ic}</div>{b.t}
-                </div>
-              ))}
-            </div>
-            <div style={{ textAlign:"center", fontSize:"0.65rem", color:"#4da6ff", letterSpacing:"0.15em", marginTop:12, fontWeight:700 }}>TRUST. TRANSPARENCY. PROTECTION.</div>
-          </div>
-
-          {/* Worker profile card */}
-          <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
-            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:4 }}>
-              <div style={{ fontWeight:800, fontSize:"0.82rem", letterSpacing:"0.08em" }}>VERITAS</div>
-              <div style={{ fontSize:"0.6rem", color:"rgba(255,255,255,0.5)" }}>TRUST YOU CAN SEE. CONFIDENCE YOU CAN FEEL.</div>
-            </div>
-            <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:16, padding:20 }}>
-              <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:16 }}>
-                <div style={{ width:56, height:56, borderRadius:10, background:"linear-gradient(135deg,#2a4a8a,#1a2d5a)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.5rem", flexShrink:0 }}>👷</div>
-                <div style={{ flex:1 }}>
-                  <div style={{ fontWeight:800, fontSize:"1rem", display:"flex", alignItems:"center", gap:6 }}>James Wilson<div style={{ width:18, height:18, borderRadius:"50%", background:"#1a6bff", display:"flex", alignItems:"center", justifyContent:"center" }}><CheckCircle size={11} color="white"/></div></div>
-                  <div style={{ fontSize:"0.78rem", color:"rgba(255,255,255,0.55)" }}>Plumbing Specialist</div>
-                  <div style={{ fontSize:"0.7rem", color:"rgba(255,255,255,0.4)" }}>📍 Austin, TX</div>
-                  <div style={{ display:"inline-flex", alignItems:"center", gap:5, marginTop:4, padding:"2px 9px", background:"rgba(26,107,255,0.1)", border:"1px solid rgba(26,107,255,0.25)", borderRadius:10, fontSize:"0.62rem", color:"#4da6ff", fontWeight:700 }}>
-                    <Shield size={10}/> VERITAS VERIFIED
-                  </div>
-                </div>
-                <HeroBadge score={845}/>
-              </div>
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginBottom:14 }}>
-                {[["TRUST SCORE","845","#00e676","Excellent"],["JOBS COMPLETED","247","white","100% Success Rate"],["MEMBER SINCE","1 Year","white","Verified"]].map(([l,v,c,s],i)=>(
-                  <div key={i} style={{ textAlign:"center" }}>
-                    <div style={{ fontSize:"0.58rem", color:"rgba(255,255,255,0.4)", letterSpacing:"0.06em", marginBottom:2 }}>{l}</div>
-                    <div style={{ fontSize:"1.4rem", fontWeight:900, color:c, lineHeight:1 }}>{v}</div>
-                    <div style={{ fontSize:"0.6rem", color:c==="#00e676"?c:"rgba(255,255,255,0.45)", marginTop:1 }}>{s}</div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.4)", marginBottom:4 }}>CUSTOMER REVIEWS</div>
-              <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:4 }}>
-                <span style={{ fontSize:"1.1rem", fontWeight:900 }}>5.0</span>
-                <span style={{ color:"#f0c040", fontSize:"0.9rem" }}>★★★★★</span>
-                <span style={{ fontSize:"0.7rem", color:"rgba(255,255,255,0.4)" }}>(128)</span>
-              </div>
-              <div style={{ fontSize:"0.75rem", color:"rgba(255,255,255,0.55)", fontStyle:"italic" }}>"Excellent work, on time and very professional."</div>
-            </div>
-            <button onClick={()=>router.push("/signup")} style={{ padding:"13px", background:"linear-gradient(135deg,#1a6bff,#0040cc)", border:"none", borderRadius:10, color:"white", fontWeight:800, cursor:"pointer", fontSize:"0.95rem", boxShadow:"0 4px 18px rgba(26,107,255,0.4)" }}>
-              Find Verified Talent →
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* STATS */}
-      <section style={{ padding:"48px 48px", borderTop:"1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:24 }}>
-          {[["12,847","Verified Professionals","#4da6ff"],["$42.1M","Total Paid Out","#00e676"],["99.2%","Dispute Resolution","#00e676"],["94","Countries Active","#f0c040"]].map(([v,l,c],i)=>(
-            <div key={i} style={{ textAlign:"center", padding:"24px 20px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:14 }}>
-              <div style={{ fontSize:"2.4rem", fontWeight:900, color:c, lineHeight:1, marginBottom:6 }}>{v}</div>
-              <div style={{ fontSize:"0.78rem", color:"rgba(255,255,255,0.5)" }}>{l}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section style={{ padding:"64px 48px", borderTop:"1px solid rgba(255,255,255,0.06)", textAlign:"center" }}>
-        <h2 style={{ fontSize:"2.4rem", fontWeight:900, marginBottom:12 }}>Ready to Build Your Verified Reputation?</h2>
-        <p style={{ color:"rgba(255,255,255,0.5)", marginBottom:28, fontSize:"1rem" }}>Join 12,847 verified professionals. Free forever.</p>
-        <div style={{ display:"flex", gap:12, justifyContent:"center" }}>
-          <button onClick={()=>router.push("/signup")} style={{ padding:"14px 36px", background:"linear-gradient(135deg,#D4AF37,#c9a227,#a07810)", border:"none", borderRadius:8, color:"#0a0800", fontWeight:800, fontSize:"1rem", cursor:"pointer" }}>Get Verified Free →</button>
-          <button onClick={()=>router.push("/marketplace")} style={{ padding:"14px 28px", background:"transparent", border:"1px solid rgba(255,255,255,0.25)", borderRadius:8, color:"white", fontSize:"0.95rem", cursor:"pointer" }}>Browse Talent</button>
-        </div>
-      </section>
-
-      <footer style={{ padding:"24px 48px", borderTop:"1px solid rgba(255,255,255,0.06)", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:12 }}>
-        <div style={{ fontSize:"0.72rem", color:"rgba(255,255,255,0.3)" }}>© 2026 Veritas Network · Truth Becomes Trust</div>
-        <div style={{ display:"flex", gap:20 }}>
-          {[["Privacy","/contact"],["Terms","/contact"],["Help","/help"],["Governance","/governance"]].map(([l,h])=>(
-            <span key={l} onClick={()=>router.push(h)} style={{ fontSize:"0.72rem", color:"rgba(255,255,255,0.35)", cursor:"pointer" }}>{l}</span>
-          ))}
-        </div>
-      </footer>
-    </div>
+    </main>
   );
 }

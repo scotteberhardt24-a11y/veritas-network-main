@@ -5,7 +5,7 @@ import compression from "compression";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
-
+import truscoreRoutes from "./routes/truscore.routes.js";
 import { env } from "./config/env.js";
 import authRoutes from "./routes/authRoutes.js";
 import healthRoutes from "./routes/healthRoutes.js";
@@ -65,6 +65,7 @@ app.use("/api/jobs", jobRoutes);
 app.use("/api/trust", trustRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/matching", matchingRoutes);
+app.use("/api/trust", truscoreRoutes);
 
 app.get("/", (req, res) => {
   res.json({ status: "ok", name: "Veritas API v1" });
