@@ -172,10 +172,7 @@ export function computeTruScore(
     }
   }
 
-export { computeTruScore, S0, GMAX_30D, ALGORITHM } from 
-"@veritas/truscore";
-export type * from "@veritas/truscore";  
-const score = Math.round(clamp(S0 + positiveSum - penaltySum, 0, 1000));
+  const score = Math.round(clamp(S0 + positiveSum - penaltySum, 0, 1000));
 
   return {
     score,
@@ -183,9 +180,7 @@ const score = Math.round(clamp(S0 + positiveSum - penaltySum, 0, 1000));
     algorithm: ALGORITHM,
     eventCount: events.length,
     asOf: asOf.toISOString(),
-    breakdown: {export { computeTruScore, S0, GMAX_30D, ALGORITHM } from 
-"@veritas/truscore";
-export type * from "@veritas/truscore";
+    breakdown: {
       prior: S0,
       positiveSum: Math.round(positiveSum * 100) / 100,
       penaltySum: Math.round(penaltySum * 100) / 100,
