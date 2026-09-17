@@ -1,3 +1,4 @@
+import passportRoutes from "./routes/passport.routes.js";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -28,6 +29,8 @@ app.use(
 );
 
 app.use(helmet());
+
+app.use("/api/passport", passportRoutes);
 
 app.use(compression());
 
