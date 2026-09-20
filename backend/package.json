@@ -2,7 +2,7 @@
   "name": "veritas-backend",
   "version": "1.0.0",
   "private": true,
-  "description": "Veritas Trust Ledger API \u2014 Node/Express backend (Railway-ready)",
+  "description": "Veritas Trust Ledger API — Node/Express backend (Railway-ready)",
   "main": "src/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
@@ -40,6 +40,7 @@
     "form-data": "^4.0.5",
     "helmet": "^8.1.0",
     "ioredis": "^5.10.1",
+    "jose": "^6.2.12",
     "jsonwebtoken": "^9.0.3",
     "ml-distance": "^4.0.1",
     "morgan": "^1.10.1",

@@ -15,7 +15,7 @@ import jobRoutes from "./routes/jobRoutes.js";
 import trustRoutes from "./routes/trustRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import matchingRoutes from "./routes/matchingRoutes.js";
-
+import passportRoutes from "./routes/passport.routes.js";
 
 
 const app = express();
@@ -26,6 +26,8 @@ app.use(
     credentials: true
   })
 );
+
+app.use("/api/passport", passportRoutes);
 
 app.use(helmet());
 
