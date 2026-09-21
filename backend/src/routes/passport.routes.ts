@@ -37,8 +37,13 @@ router.get("/:username/metadata", async (req: Request, res: Response) => {
     res.setHeader("Cache-Control", "public, max-age=300");
 
     return res.json({
-      name: `Veritas Trust Passport — ${user.username}`,
-      description: `Veritas Network Trust Passport for ${user.username}. Score ${user.trustScore}.`,
+      name: "Veritas Trust Passport — " + user.username,
+      description:
+        "Veritas Network Trust Passport for " +
+        user.username +
+        ". Score " +
+        user.trustScore +
+        ".",
       attributes: [
         { trait_type: "Trust Score", value: user.trustScore },
         { trait_type: "Completed Jobs", value: user.completedJobs },
@@ -83,6 +88,9 @@ router.get("/:username", async (req: Request, res: Response) => {
     }
 
     const score = user.trustScore;
+    const contractAddress = process.env.CONTRACT_ADDRESS
+      ? process.env.CONTRACT_ADDRESS
+      : null;
 
     res.setHeader("Cache-Control", "public, max-age=60");
 
@@ -96,7 +104,7 @@ router.get("/:username", async (req: Request, res: Response) => {
         role: user.role,
       },
       trust: {
-        score,
+        score: score,
         band: bandFromScore(score),
         algorithm: "truscore-v1",
         asOf: new Date().toISOString(),
@@ -118,7 +126,7 @@ router.get("/:username", async (req: Request, res: Response) => {
       },
       chain: {
         network: "polygon",
-        contractAddress: process.env.CONTRACT_ADDRESS || null,
+        contractAddress: contractAddress,
         tokenId: null,
         soulbound: true,
       },
@@ -127,7 +135,7 @@ router.get("/:username", async (req: Request, res: Response) => {
         issuedAt: new Date().toISOString(),
         expiresAt: null,
         issuer: "veritas-network",
-        revoked: !!user.flagged,
+        revoked: Boolean(user.flagged),
       },
     });
   } catch (err) {
