@@ -16,6 +16,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import matchingRoutes from "./routes/matchingRoutes.js";
 import truscoreRoutes from "./routes/truscore.routes.js";
 import passportRoutes from "./routes/passport.routes.js";
+import kycRoutes from "./routes/kyc.routes.js";
 
 const app = express();
 
@@ -58,6 +59,7 @@ app.use("/api/trust", truscoreRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/matching", matchingRoutes);
 app.use("/api/passport", passportRoutes);
+app.use("/api/kyc", kycRoutes);
 
 app.get("/", (_req, res) => {
   res.json({ status: "ok", name: "Veritas API v1" });
