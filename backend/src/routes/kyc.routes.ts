@@ -1,6 +1,10 @@
 import { Router, Request, Response } from "express";
+import { createRequire } from "module";
 import { prisma } from "../database/prisma.js";
 import crypto from "crypto";
+
+const require = createRequire(import.meta.url);
+const auth = require("../middleware/auth.js");
 
 const router = Router();
 
@@ -10,10 +14,11 @@ const router = Router();
  * Body: optional { redirectUri?: string }
  * Creates Persona inquiry and returns hosted URL.
  */
-router.post("/start", async (req: Request, res: Response) => {
+router.post("/start", auth, async (req: Request, res: Response) => {
   try {
     // TODO: replace with your real auth (req.user.id)
-    const userId = (req as any).user?.id as string | undefined;
+    const u = (req as any).user || {};
+    const userId = (u.id || u.userId || u.sub) as string | undefined;
     if (!userId) {
       return res.status(401).json({ error: "Login required" });
     }
@@ -152,9 +157,10 @@ router.post("/webhook", async (req: Request, res: Response) => {
  * GET /api/kyc/status
  * Auth required — returns current verification level.
  */
-router.get("/status", async (req: Request, res: Response) => {
+router.get("/status", auth, async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).user?.id as string | undefined;
+    const u = (req as any).user || {};
+    const userId = (u.id || u.userId || u.sub) as string | undefined;
     if (!userId) return res.status(401).json({ error: "Login required" });
     const user = await prisma.user.findUnique({
       where: { id: userId },
