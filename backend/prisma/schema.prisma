@@ -6,7 +6,13 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
+enum VerificationLevel {
+  UNVERIFIED
+  EMAIL_VERIFIED
+  ID_PENDING
+  ID_VERIFIED
+  ID_FAILED
+}
 model User {
   id               String           @id @default(uuid()) @db.Uuid
   email            String           @unique
@@ -38,6 +44,10 @@ model User {
   reviewsWritten   Review[]         @relation("ReviewsWritten")
   sessions         Session[]
   wallet           Wallet?
+verificationLevel VerificationLevel @default(UNVERIFIED)
+  kycProvider       String?
+  kycInquiryId      String?         @unique
+  kycVerifiedAt     DateTime?
 
   @@index([email])
   @@index([username])
@@ -200,6 +210,7 @@ model Session {
   userId    String   @db.Uuid
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
 
 enum UserRole {
   CLIENT
