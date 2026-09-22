@@ -1,10 +1,23 @@
-import { Router, Request, Response } from "express";
-import { createRequire } from "module";
+import { Router, Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
 import { prisma } from "../database/prisma.js";
 import crypto from "crypto";
 
-const require = createRequire(import.meta.url);
-const auth = require("../middleware/auth.js");
+function auth(req: Request, res: Response, next: NextFunction) {
+  const header = req.headers.authorization;
+  if (!header || !header.startsWith("Bearer ")) {
+    return res.status(401).json({ success: false, message: "No token provided" });
+  }
+  const token = header.split(" ")[1];
+  try {
+    const secret = process.env.JWT_SECRET || "veritas_secret";
+    const decoded = jwt.verify(token, secret) as Record<string, unknown>;
+    (req as any).user = decoded;
+    next();
+  } catch {
+    return res.status(401).json({ success: false, message: "Invalid or expired token" });
+  }
+}
 
 const router = Router();
 
