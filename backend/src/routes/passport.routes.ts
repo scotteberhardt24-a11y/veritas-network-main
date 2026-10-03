@@ -18,7 +18,6 @@ router.get("/:username/metadata", async (req: Request, res: Response) => {
     if (!username) {
       return res.status(400).json({ error: "username required" });
     }
-
     const user = await prisma.user.findUnique({
       where: { username },
       select: {
@@ -28,33 +27,22 @@ router.get("/:username/metadata", async (req: Request, res: Response) => {
         completedJobs: true,
       },
     });
-
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-
     res.setHeader("Content-Type", "application/json");
     res.setHeader("Cache-Control", "public, max-age=300");
-
     return res.json({
-      name: "Veritas Trust Passport — " + user.username,
-      description:
-        "Veritas Network Trust Passport for " +
-        user.username +
-        ". Score " +
-        user.trustScore +
-        ".",
+      name: "Veritas Trust Passport - " + user.username,
+      description: "Score " + String(user.trustScore),
       attributes: [
         { trait_type: "Trust Score", value: user.trustScore },
-        { trait_type: "Completed Jobs", value: user.completedJobs },
         { trait_type: "Role", value: String(user.role) },
       ],
       properties: {
         schema: "veritas.passport.v1",
         username: user.username,
         trustScore: user.trustScore,
-        soulbound: true,
-        network: "Polygon",
       },
     });
   } catch (err) {
@@ -69,7 +57,6 @@ router.get("/:username", async (req: Request, res: Response) => {
     if (!username) {
       return res.status(400).json({ error: "username required" });
     }
-
     const user = await prisma.user.findUnique({
       where: { username },
       select: {
@@ -82,18 +69,11 @@ router.get("/:username", async (req: Request, res: Response) => {
         flagged: true,
       },
     });
-
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-
     const score = user.trustScore;
-    const contractAddress = process.env.CONTRACT_ADDRESS
-      ? process.env.CONTRACT_ADDRESS
-      : null;
-
     res.setHeader("Cache-Control", "public, max-age=60");
-
     return res.json({
       schema: "veritas.passport.v1",
       id: user.id,
@@ -126,7 +106,7 @@ router.get("/:username", async (req: Request, res: Response) => {
       },
       chain: {
         network: "polygon",
-        contractAddress: contractAddress,
+        contractAddress: process.env.CONTRACT_ADDRESS || null,
         tokenId: null,
         soulbound: true,
       },

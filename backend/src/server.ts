@@ -6,8 +6,9 @@ import { logger } from "./utils/logger.js";
 
 const server = http.createServer(app);
 
-server.listen(env.PORT, () => {
-  logger.info(
-    `🚀 Veritas backend running on http://localhost:${env.PORT}`
-  );
+const port = Number(process.env.PORT) || 8080;
+
+server.listen(port, "0.0.0.0", () => {
+  logger.info(`🚀 Veritas backend running on http://0.0.0.0:${port}`);
+  // or: console.log(`🚀 Veritas backend running on http://0.0.0.0:${port}`);
 });

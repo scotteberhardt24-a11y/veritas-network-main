@@ -10,6 +10,17 @@ function makeToken(userId) {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
 }
 
+function publicUser(user) {
+  return {
+    id: user.id,
+    name: user.name || user.username || null,
+    email: user.email,
+    username: user.username,
+    role: user.role,
+    trustScore: user.trustScore,
+  };
+}
+
 async function sendWelcomeEmail(name, email) {
   try {
     const RESEND_KEY = process.env.RESEND_API_KEY;
@@ -27,12 +38,11 @@ async function sendWelcomeEmail(name, email) {
         from: "Veritas Network <welcome@veritas.network>",
         to: email,
         subject: "Welcome to Veritas Network",
-        html: "<p>Welcome, " + name + "! Your Veritas account is ready.</p>",
+        html: "<p>Welcome, " + (name || "there") + "! Your Veritas account is ready.</p>",
       }),
     });
-    console.log("[EMAIL] Welcome email sent to " + email);
   } catch (err) {
-    console.error("[EMAIL] Failed to send welcome email:", err.message);
+    console.error("[EMAIL] Failed:", err.message);
   }
 }
 
@@ -40,8 +50,8 @@ exports.register = async (req, res) => {
   try {
     const { name, email, password, role = "WORKER" } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ success: false, message: "Name, email and password are required" });
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: "Email and password are required" });
     }
     if (password.length < 6) {
       return res.status(400).json({ success: false, message: "Password must be at least 6 characters" });
@@ -52,63 +62,81 @@ exports.register = async (req, res) => {
       return res.status(409).json({ success: false, message: "An account with this email already exists" });
     }
 
-    const baseUsername = name.toLowerCase().replace(/\s+/g, ".").replace(/[^a-z0-9.]/g, "");
-    let username = baseUsername;
+    const base = (name || email.split("@")[0] || "user")
+      .toLowerCase()
+      .replace(/\s+/g, ".")
+      .replace(/[^a-z0-9.]/g, "") || "user";
+    let username = base;
     let counter = 1;
     while (await prisma.user.findUnique({ where: { username } })) {
-      username = baseUsername + counter++;
+      username = base + counter++;
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const userRole = role.toUpperCase() === "CLIENT" ? "CLIENT" : "WORKER";
+    const userRole = String(role).toUpperCase() === "CLIENT" ? "CLIENT" : "WORKER";
 
-    const user = await prisma.user.create({
-      data: {
-        email,
-        username,
-        name,
-        passwordHash,
-        role: userRole,
-        trustScore: 50,
-      },
-    });
+    // Build data without name first; add name only if schema supports it
+    const data = {
+      email,
+      username,
+      passwordHash,
+      role: userRole,
+      trustScore: 50,
+    };
+    if (name) {
+      data.name = name;
+    }
 
-    await prisma.wallet.create({
-      data: {
-        userId: user.id,
-        address: "0x" + user.id.replace(/-/g, ""),
-        balance: 0,
-      },
-    }).catch(function () {});
+    let user;
+    try {
+      user = await prisma.user.create({ data });
+    } catch (e) {
+      // Retry without name if unknown argument
+      if (String(e.message || e).includes("name") || String(e.code) === "P2009") {
+        delete data.name;
+        user = await prisma.user.create({ data });
+      } else {
+        throw e;
+      }
+    }
+
+    try {
+      await prisma.wallet.create({
+        data: {
+          userId: user.id,
+          address: "0x" + String(user.id).replace(/-/g, ""),
+          balance: 0,
+        },
+      });
+    } catch (_) {}
 
     const token = makeToken(user.id);
 
-    await prisma.session.create({
-      data: {
-        userId: user.id,
-        token: token,
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      },
-    }).catch(function () {});
+    try {
+      await prisma.session.create({
+        data: {
+          userId: user.id,
+          token,
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+      });
+    } catch (_) {}
 
-    sendWelcomeEmail(name, email);
+    sendWelcomeEmail(name || username, email);
 
     return res.status(201).json({
       success: true,
       message: "Account created successfully",
-      token: token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        username: user.username,
-        role: user.role,
-        trustScore: user.trustScore,
-      },
+      token,
+      user: publicUser(user),
     });
   } catch (err) {
     console.error("[AUTH] Register error:", err);
-    return res.status(500).json({ success: false, message: "Registration failed. Please try again." });
+    return res.status(500).json({
+      success: false,
+      message: "Registration failed. Please try again.",
+      detail: process.env.NODE_ENV === "production" ? undefined : String(err.message || err),
+    });
   }
 };
 
@@ -125,6 +153,10 @@ exports.login = async (req, res) => {
       return res.status(401).json({ success: false, message: "No account found with this email" });
     }
 
+    if (!user.passwordHash) {
+      return res.status(401).json({ success: false, message: "Incorrect password" });
+    }
+
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) {
       return res.status(401).json({ success: false, message: "Incorrect password" });
@@ -132,55 +164,63 @@ exports.login = async (req, res) => {
 
     const token = makeToken(user.id);
 
-    await prisma.session.create({
-      data: {
-        userId: user.id,
-        token: token,
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      },
-    }).catch(function () {});
+    try {
+      await prisma.session.create({
+        data: {
+          userId: user.id,
+          token,
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+      });
+    } catch (_) {}
 
     return res.json({
       success: true,
-      token: token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        username: user.username,
-        role: user.role,
-        trustScore: user.trustScore,
-      },
+      token,
+      user: publicUser(user),
     });
   } catch (err) {
     console.error("[AUTH] Login error:", err);
-    return res.status(500).json({ success: false, message: "Login failed. Please try again." });
+    return res.status(500).json({
+      success: false,
+      message: "Login failed. Please try again.",
+      detail: process.env.NODE_ENV === "production" ? undefined : String(err.message || err),
+    });
   }
 };
 
 exports.getMe = async (req, res) => {
   try {
+    const id = (req.user && (req.user.userId || req.user.id)) || null;
+    if (!id) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
     const user = await prisma.user.findUnique({
-      where: { id: req.user && (req.user.userId || req.user.id) },
+      where: { id },
       select: {
         id: true,
         email: true,
         username: true,
-        name: true,
         role: true,
         trustScore: true,
-        skills: true,
-        hourlyRate: true,
-        availability: true,
-        completedJobs: true,
         createdAt: true,
       },
     });
+
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
-    return res.json({ success: true, user: user });
+
+    return res.json({
+      success: true,
+      user: {
+        ...user,
+        name: user.username,
+      },
+    });
   } catch (err) {
+    console.error("[AUTH] getMe error:", err);
     return res.status(500).json({ success: false, message: "Failed to fetch user" });
   }
 };
@@ -188,7 +228,7 @@ exports.getMe = async (req, res) => {
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    const user = await prisma.user.findUnique({ where: { email: email } });
+    const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
       return res.json({ success: true, message: "If this email exists, a reset link has been sent." });
@@ -239,7 +279,7 @@ exports.resetPassword = async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 12);
     await prisma.user.update({
       where: { id: decoded.userId },
-      data: { passwordHash: passwordHash },
+      data: { passwordHash },
     });
     await prisma.session.deleteMany({ where: { userId: decoded.userId } });
 

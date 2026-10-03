@@ -192,3 +192,12 @@ router.get("/status", auth, async (req: Request, res: Response) => {
 });
 
 export default router;
+
+// STUB: Persona not configured — do not crash
+exports.start = async (req, res) => {
+  return res.status(503).json({
+    success: false,
+    message: "Identity verification is not configured yet. Coming soon.",
+    code: "KYC_NOT_CONFIGURED",
+  });
+};
