@@ -2,11 +2,11 @@
   "name": "veritas-backend",
   "version": "1.0.0",
   "private": true,
-  "description": "Veritas Trust Ledger API — Node/Express backend (Railway-ready)",
+  "description": "Veritas Trust Ledger API \u2014 Node/Express backend (Railway-ready)",
   "main": "src/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "pnpm install && pnpm exec prisma generate && pnpm exec tsc",
+    "build": "pnpm exec prisma generate && pnpm exec tsc",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
@@ -59,7 +59,8 @@
     "tweetnacl": "^1.0.3",
     "tweetnacl-util": "^0.15.1",
     "uuid": "^13.0.2",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "typescript": "^6.0.3"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
