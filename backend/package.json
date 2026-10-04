@@ -60,7 +60,8 @@
     "tweetnacl-util": "^0.15.1",
     "uuid": "^13.0.2",
     "zod": "^3.25.76",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "@types/node": "^25.9.1"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",

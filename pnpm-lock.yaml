@@ -215,6 +215,9 @@ importers:
       '@prisma/client':
         specifier: 6.16.2
         version: 6.16.2(prisma@6.16.2(magicast@0.5.4)(typescript@6.0.3))(typescript@6.0.3)
+      '@types/node':
+        specifier: ^25.9.1
+        version: 25.9.2
       ajv:
         specifier: ^8.18.0
         version: 8.20.0
@@ -351,9 +354,6 @@ importers:
       '@types/morgan':
         specifier: ^1.9.10
         version: 1.9.10
-      '@types/node':
-        specifier: ^25.9.1
-        version: 25.9.2
       concurrently:
         specifier: ^9.2.1
         version: 9.2.1
