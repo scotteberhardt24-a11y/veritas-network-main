@@ -20,6 +20,8 @@ import kycRoutes from "./routes/kyc.routes.js";
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 app.use(
   cors({
     origin: env.CORS_ORIGIN,
