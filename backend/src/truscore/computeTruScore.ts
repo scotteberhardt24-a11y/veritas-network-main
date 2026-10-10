@@ -6,7 +6,7 @@ import type {
   TruScoreResult,
 } from "./types";
 
-const S0 = 500;
+const S0 = 50;
 const GMAX_30D = 80;
 const ALGORITHM = "truscore-v1" as const;
 
