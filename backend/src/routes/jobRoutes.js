@@ -1,14 +1,14 @@
 const express = require("express");
 const router = express.Router();
+const auth = require("../middleware/auth");
 
-// In-memory store until Prisma Job model is wired everywhere
 const jobs = [];
 
 function getUserId(req) {
-  return req.user?.id || req.headers["x-user-id"] || null;
+  if (!req.user) return null;
+  return req.user.id || req.user.userId || null;
 }
 
-// GET /api/jobs
 router.get("/", (req, res) => {
   const status = req.query.status;
   let list = jobs;
@@ -16,15 +16,13 @@ router.get("/", (req, res) => {
   return res.json({ success: true, jobs: list });
 });
 
-// GET /api/jobs/:id
 router.get("/:id", (req, res) => {
   const job = jobs.find((j) => j.id === req.params.id);
   if (!job) return res.status(404).json({ success: false, message: "Job not found" });
   return res.json({ success: true, job });
 });
 
-// POST /api/jobs
-router.post("/", (req, res) => {
+router.post("/", auth, (req, res) => {
   const { title, description, budget, currency } = req.body || {};
   if (!title || typeof title !== "string") {
     return res.status(400).json({ success: false, message: "title is required" });
@@ -45,12 +43,19 @@ router.post("/", (req, res) => {
   return res.status(201).json({ success: true, job });
 });
 
-// PATCH /api/jobs/:id/status
-router.patch("/:id/status", (req, res) => {
+router.patch("/:id/status", auth, (req, res) => {
   const job = jobs.find((j) => j.id === req.params.id);
   if (!job) return res.status(404).json({ success: false, message: "Job not found" });
   const { status } = req.body || {};
-  const allowed = ["open", "funded", "in_progress", "delivered", "released", "disputed", "cancelled"];
+  const allowed = [
+    "open",
+    "funded",
+    "in_progress",
+    "delivered",
+    "released",
+    "disputed",
+    "cancelled",
+  ];
   if (!allowed.includes(status)) {
     return res.status(400).json({ success: false, message: "invalid status", allowed });
   }
